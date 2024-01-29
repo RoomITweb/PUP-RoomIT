@@ -9,7 +9,7 @@ function FacultySchedule() {
   const [facultyName, setFacultyName] = useState('');
   const [facultySchedules, setFacultySchedules] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSchedule, setSelectedSchedule] = useState({});
+  const [selectedSchedule, setSelectedSchedule] = useState('');
   const [showScanner, setShowScanner] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [attendingClass, setAttendingClass] = useState(false);
@@ -78,6 +78,14 @@ function FacultySchedule() {
           setAttendingClass(true);
         }
 
+        const selectedScheduleRef = ref(database, `rooms`);
+        const selectedScheduleSnapshot = await get(selectedScheduleRef);
+  
+        if (selectedScheduleSnapshot.exists()) {
+          const selectedScheduleData = selectedScheduleSnapshot.val();
+          setSelectedSchedule(selectedScheduleData);
+        }
+
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -96,7 +104,7 @@ function FacultySchedule() {
     return () => {
       unsubscribe();
     };
-  }, [auth, database, facultyName, selectedSchoolYear, selectedSemester, roomOccupied, attendingClass]);
+  }, [auth, database, facultyName, selectedSchoolYear, selectedSemester, roomOccupied, attendingClass, selectedSchedule]);
 
   const handleOpenScanner = (subject) => {
     setSelectedSchedule(subject);
@@ -217,7 +225,7 @@ function FacultySchedule() {
             });
           }
 
-          await set(ref(database, `rooms/${selectedSchedule.room}`), {roomOccupied});
+          await set(ref(database, `rooms/${selectedSchedule.room}`), null);
 
           setRoomOccupied(false);
           setErrorMessage('');
