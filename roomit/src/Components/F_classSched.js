@@ -226,6 +226,7 @@ function FacultySchedule() {
             });
           }
 
+          setSelectedSchedule(null);
           setRoomOccupied(false);
           setErrorMessage('');
           setSuccessMessage('You have successfully ended the class.');
