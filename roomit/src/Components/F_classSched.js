@@ -208,6 +208,7 @@ function FacultySchedule() {
             const historyData = historySnapshot.val();
 
             // Update the existing entry for the specific room
+            await set(ref(database, `rooms/${selectedSchedule.room}`), null);
             await set(historyRef, {
               ...historyData,
               [timeEnded.toString()]: {
@@ -224,8 +225,6 @@ function FacultySchedule() {
               },
             });
           }
-
-          await set(ref(database, `rooms/${selectedSchedule.room}`), null);
 
           setRoomOccupied(false);
           setErrorMessage('');
