@@ -92,14 +92,6 @@ function FacultySchedule() {
     };
   }, [auth, database, facultyName, selectedSchoolYear, selectedSemester]);
 
-  // Load the attendingClass state from localStorage on component mount
-  useEffect(() => {
-    const storedAttendingClass = localStorage.getItem('attendingClass');
-    if (storedAttendingClass) {
-      setAttendingClass(JSON.parse(storedAttendingClass));
-    }
-  }, []);
-
   const handleOpenScanner = (subject) => {
     setSelectedSchedule(subject);
     setShowScanner(true);
