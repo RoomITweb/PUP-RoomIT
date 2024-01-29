@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getDatabase, ref, onValue, update } from 'firebase/database';
+import { getDatabase, ref, onValue } from 'firebase/database';
 import { app } from './firebase';
 import './C_viewRoom.css';
 import 'bootstrap/dist/css/bootstrap.css';
@@ -27,40 +27,6 @@ function ViewRoom({ facultySchedules }) {
       // sa pag-unmount ng component.
     };
   }, [database]);
-
-  const handleEndClass = async () => {
-    setShowScanner(false);
-  
-    if (auth.currentUser) {
-      const userUid = auth.currentUser.uid;
-  
-      set(ref(database, `users/${userUid}/occupiedRoom`), null);
-  
-      if (selectedSchedule.room) {
-        const timeEnded = Date.now(); // Unix timestamp in milliseconds
-  
-        const historyRef = ref(database, `history/${selectedSchedule.room}`);
-        
-        try {
-          // Create a new entry for the specific room in the history collection
-          await set(historyRef, {
-            ...selectedSchedule,
-            timeEnded: timeEnded,
-          });
-  
-          // Clear the room information in the current collection
-          await set(ref(database, `rooms/${selectedSchedule.room}`), null);
-  
-          setRoomOccupied(false);
-          setErrorMessage('');
-          setSuccessMessage('You have successfully ended the class.');
-        } catch (error) {
-          console.error('Error updating history:', error);
-          setErrorMessage('Error ending the class. Please try again.');
-        }
-      }
-    }
-  };
 
   const isRoomOccupied = (room) => {
     if (rooms[room] && rooms[room].facultyName) {
@@ -210,7 +176,6 @@ function ViewRoom({ facultySchedules }) {
           <p>Course: {rooms[selectedRoom].course}</p>
           <p>Day: {rooms[selectedRoom].day}</p>
           <p>Time: {rooms[selectedRoom].time}</p>
-          <button onClick={() => handleEndClass(selectedRoom)}>End Class</button>
         </>
       ) : (
         <>
