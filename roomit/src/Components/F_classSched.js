@@ -22,7 +22,7 @@ function FacultySchedule() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   // Retrieve the last known roomOccupied state from localStorage
-  const initialRoomOccupiedState = localStorage.getItem('roomOccupied') === 'true';
+  const initialRoomOccupiedState = localStorage.getItem('roomOccupied') === 'false';
   const [roomOccupied, setRoomOccupied] = useState(initialRoomOccupiedState);
 
   const auth = getAuth(app);
@@ -178,60 +178,59 @@ function FacultySchedule() {
 
   
   const handleEndClass = async () => {
+    console.log('Entering handleEndClass');
     setAttendingClass(false);
     setShowScanner(false);
-  
+
     if (auth.currentUser) {
-      try {
-        // Check if selectedSchedule is not null or undefined before accessing its properties
-        if (selectedSchedule && selectedSchedule.room) {
-          const userUid = auth.currentUser.uid;
-  
-          // Check if the room is already occupied
-          const occupiedRoomRef = ref(database, `rooms/${selectedSchedule.room}`);
-          const occupiedRoomSnapshot = await get(occupiedRoomRef);
-  
-          if (occupiedRoomSnapshot.exists()) {
-            setErrorMessage('Error: The room is already occupied.');
-            return;
+      const userUid = auth.currentUser.uid;
+
+      set(ref(database, `users/${userUid}/occupiedRoom`), null);
+
+      if (selectedSchedule && selectedSchedule.room) {
+        const timeEnded = Date.now(); // Unix timestamp in milliseconds
+
+        const historyRef = ref(database, `history`);
+
+        try {
+          const historySnapshot = await get(historyRef);
+
+          if (historySnapshot.exists()) {
+            const historyData = historySnapshot.val();
+
+            // Update the existing entry for the specific room
+            await set(historyRef, {
+              ...historyData,
+              [timeEnded.toString()]: {
+                ...selectedSchedule,
+                timeEnded: timeEnded,
+              },
+            });
+          } else {
+            // Create a new entry for the specific room
+            await set(historyRef, {
+              [timeEnded.toString()]: {
+                ...selectedSchedule,
+                timeEnded: timeEnded,
+              },
+            });
           }
-  
-          // Get the current date and time
-          const currentTime = new Date().toLocaleString();
-  
-          const scheduleData = {
-            schoolYear: selectedSchedule.schoolYear,
-            semester: selectedSchedule.semester,
-            facultyName: facultyName,
-            subjectCode: selectedSchedule.subjectCode,
-            subjectDescription: selectedSchedule.subjectDescription,
-            course: selectedSchedule.course,
-            day: selectedSchedule.day,
-            time: selectedSchedule.time,
-            building: selectedSchedule.building,
-            room: selectedSchedule.room,
-            attendedTime: currentTime,
-          };
-  
-          // Include the 'attendendTime' field in selectedSchedule
-          selectedSchedule.attendTime = currentTime;
-  
-          await set(ref(database, `rooms/${selectedSchedule.room}`), scheduleData, currentTime);
-          await set(ref(database, `users/${userUid}/occupiedRoom`), selectedSchedule.room);
-  
-          setRoomOccupied(true);
-          setSuccessMessage('You have successfully attended the class.');
+
+          await set(ref(database, `rooms/${selectedSchedule.room}`), null);
+
+          console.log('Setting roomOccupied to false');
+          setRoomOccupied(false);
+          localStorage.setItem('roomOccupied');
+          console.log('Removed roomOccupied from localStorage');
           setErrorMessage('');
-        } else {
-          console.error('selectedSchedule or selectedSchedule.room is null or undefined');
+          setSuccessMessage('You have successfully ended the class.');
+        } catch (error) {
+          console.error('Error updating history:', error);
+          setErrorMessage('Error ending the class. Please try again.');
         }
-      } catch (error) {
-        console.error('Error attending class:', error);
-        setErrorMessage('Error attending the class. Please try again.');
       }
     }
   };
-  
 
   const filterSchedulesByDay = (day) => {
     if (day === 'All') {
