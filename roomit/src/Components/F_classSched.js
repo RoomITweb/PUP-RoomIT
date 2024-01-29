@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { getDatabase, ref, get, set, query, orderByChild, equalTo } from 'firebase/database';
+import {
+  getDatabase,
+  ref,
+  get,
+  set,
+  query,
+  orderByChild,
+  equalTo,
+} from 'firebase/database';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { app } from './firebase';
 import ReactModal from 'react-modal';
@@ -13,6 +21,7 @@ function FacultySchedule() {
   const [showScanner, setShowScanner] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [attendingClass, setAttendingClass] = useState(false);
+  const [roomOccupied, setRoomOccupied] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scanMessage, setScanMessage] = useState('');
   const [selectedDay, setSelectedDay] = useState('');
@@ -20,24 +29,10 @@ function FacultySchedule() {
   const [selectedSemester, setSelectedSemester] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  // Retrieve the last known roomOccupied state from localStorage
-  const initialRoomOccupiedState = localStorage.getItem('roomOccupied') === 'true';
-  // Retrieve the last known selectedSchedule state from localStorage
-  const initialSelectedScheduleState = JSON.parse(localStorage.getItem('selectedSchedule')) || null;
-
-  const [roomOccupied, setRoomOccupied] = useState(initialRoomOccupiedState);
 
   const auth = getAuth(app);
   const database = getDatabase(app);
   ReactModal.setAppElement('#root'); // or any other root element in your HTML
-
-  navigator.mediaDevices.getUserMedia({ video: true })
-    .then(function (stream) {
-      // Success - the camera is accessible
-    })
-    .catch(function (error) {
-      console.error('Error accessing camera:', error);
-    });
 
   useEffect(() => {
     const fetchData = async (user) => {
@@ -51,6 +46,13 @@ function FacultySchedule() {
             setFacultyName(`${userData.firstName} ${userData.lastName}`);
           }
         }
+
+        // Retrieve roomOccupied and attendingClass states from localStorage
+        const storedRoomOccupied = localStorage.getItem('roomOccupied') === 'true';
+        const storedAttendingClass = localStorage.getItem('attendingClass') === 'true';
+
+        setRoomOccupied(storedRoomOccupied);
+        setAttendingClass(storedAttendingClass);
 
         if (selectedSchoolYear && selectedSemester) {
           const schedulesRef = ref(database, 'schedules');
@@ -73,20 +75,6 @@ function FacultySchedule() {
               }
             });
             setFacultySchedules(facultySchedules);
-
-            // Check if there's a selected schedule from localStorage
-            if (initialSelectedScheduleState) {
-              // If there's a selected schedule, check if it's still in the fetched schedules
-              const isStillValid = facultySchedules.some(
-                (schedule) => schedule.room === initialSelectedScheduleState.room
-              );
-
-              if (!isStillValid) {
-                // If not valid, clear the selected schedule
-                setSelectedSchedule(null);
-                localStorage.removeItem('selectedSchedule');
-              }
-            }
           }
         }
       } catch (error) {
@@ -100,11 +88,6 @@ function FacultySchedule() {
       if (user) {
         fetchData(user);
       } else {
-        // Clear the roomOccupied and selectedSchedule when logging out
-        setRoomOccupied(false);
-        setSelectedSchedule(null);
-        localStorage.removeItem('roomOccupied');
-        localStorage.removeItem('selectedSchedule');
         setLoading(false);
       }
     });
@@ -120,9 +103,11 @@ function FacultySchedule() {
     setIsScannerOpen(true);
 
     if (subject.room) {
-      setIsScannerOpen(true);
       setScanMessage(`Room: ${subject.room}`);
     }
+
+    // Set attendingClass state to false when opening the scanner
+    setAttendingClass(false);
   };
 
   const handleQrCodeScan = (result) => {
@@ -133,7 +118,7 @@ function FacultySchedule() {
     if (scanMessage && result.includes(scanMessage)) {
       // Check if the room is already occupied
       if (roomOccupied && selectedSchedule.room !== scanMessage) {
-        setErrorMessage('');
+        setErrorMessage('Error: Room is already occupied by another user.');
         return;
       }
 
@@ -157,11 +142,11 @@ function FacultySchedule() {
       const userUid = auth.currentUser.uid;
 
       // Check if the room is already occupied
-      const occupiedRoomRef = ref(database, `rooms/${selectedSchedule.room}`);
+      const occupiedRoomRef = ref(database, `users/${userUid}/occupiedRoom`);
       const occupiedRoomSnapshot = await get(occupiedRoomRef);
 
-      if (occupiedRoomSnapshot.exists()) {
-        setErrorMessage('Error: The room is already occupied.');
+      if (occupiedRoomSnapshot.exists() && occupiedRoomSnapshot.val() !== selectedSchedule.room) {
+        setErrorMessage('Error: You are already attending a class in another room.');
         return;
       }
 
@@ -189,7 +174,6 @@ function FacultySchedule() {
       await set(ref(database, `users/${userUid}/occupiedRoom`), selectedSchedule.room);
 
       setRoomOccupied(true);
-      localStorage.setItem('roomOccupied', 'true');
       setSuccessMessage('You have successfully attended the class.');
       setErrorMessage('');
     }
@@ -204,7 +188,7 @@ function FacultySchedule() {
 
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
 
-      if (selectedSchedule && selectedSchedule.room) {
+      if (selectedSchedule.room) {
         const timeEnded = Date.now(); // Unix timestamp in milliseconds
 
         const historyRef = ref(database, `history`);
@@ -236,7 +220,6 @@ function FacultySchedule() {
           await set(ref(database, `rooms/${selectedSchedule.room}`), null);
 
           setRoomOccupied(false);
-          localStorage.setItem('roomOccupied', 'false');
           setErrorMessage('');
           setSuccessMessage('You have successfully ended the class.');
         } catch (error) {
@@ -277,7 +260,7 @@ function FacultySchedule() {
   };
 
   return (
-    <div className='h-screen justify-center flex items-center'>
+    <div className="h-screen justify-center flex items-center">
       <div className="container ">
         <div className="row">
           <div className="col-12">
@@ -296,7 +279,9 @@ function FacultySchedule() {
                       }}
                       value={selectedSchoolYear}
                     >
-                      <option value="" disabled hidden>Choose a School Year</option>
+                      <option value="" disabled hidden>
+                        Choose a School Year
+                      </option>
                       <option value="All">All</option>
                       <option value="2022-2023">2022-2023</option>
                       <option value="2023-2024">2023-2024</option>
@@ -314,7 +299,9 @@ function FacultySchedule() {
                       }}
                       value={selectedSemester}
                     >
-                      <option value="" disabled hidden>Choose a Semester</option>
+                      <option value="" disabled hidden>
+                        Choose a Semester
+                      </option>
                       <option value="All">All</option>
                       <option value="1st Semester">1st Semester</option>
                       <option value="2nd Semester">2nd Semester</option>
@@ -333,7 +320,9 @@ function FacultySchedule() {
                       }}
                       value={selectedDay}
                     >
-                      <option value="" disabled hidden>Choose a Day</option>
+                      <option value="" disabled hidden>
+                        Choose a Day
+                      </option>
                       <option value="All">All</option>
                       <option value="Mon/Wed">Mon/Wed</option>
                       <option value="Tue/Thurs">Tue/Thurs</option>
@@ -384,18 +373,22 @@ function FacultySchedule() {
                           <td>{subject.building}</td>
                           <td>{subject.room}</td>
                           <td>
-                          {/* Debugging statements */}
-                          {console.log('roomOccupied:', roomOccupied, 'attendingClass:', attendingClass)}
-
-                          {roomOccupied ? (
-                              <button className="btn btn-danger" onClick={handleEndClass}>End Class</button>
-                          ) : (
-                          attendingClass ? (
-                              <button className="btn btn-primary" onClick={handleAttendClass}>Attend Class</button>
-                          ) : (
-                              <button className="btn btn-success" onClick={() => handleOpenScanner(subject)}>Open Scanner</button>
-                              )
-                          )}
+                            {roomOccupied ? (
+                              <button className="btn btn-danger" onClick={handleEndClass}>
+                                End Class
+                              </button>
+                            ) : attendingClass ? (
+                              <button className="btn btn-primary" onClick={handleAttendClass}>
+                                Attend Class
+                              </button>
+                            ) : (
+                              <button
+                                className="btn btn-success"
+                                onClick={() => handleOpenScanner(subject)}
+                              >
+                                Open Scanner
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -403,11 +396,9 @@ function FacultySchedule() {
                   </table>
                 </div>
               )}
-
             </div>
           </div>
         </div>
-
       </div>
 
       {showScanner && (
@@ -428,12 +419,18 @@ function FacultySchedule() {
             {/* Buttons and messages */}
             <div className="mt-4">
               {isScannerOpen && (
-                <button className="bg-red-600 text-white px-4 py-2 mr-2 sm:mr-0" onClick={handleCloseScanner}>
+                <button
+                  className="bg-red-600 text-white px-4 py-2 mr-2 sm:mr-0"
+                  onClick={handleCloseScanner}
+                >
                   Close Scanner
                 </button>
               )}
               {attendingClass && (
-                <button className="bg-blue-600 text-white px-4 py-2" onClick={handleAttendClass}>
+                <button
+                  className="bg-blue-600 text-white px-4 py-2"
+                  onClick={handleAttendClass}
+                >
                   Attend Class
                 </button>
               )}
@@ -443,7 +440,6 @@ function FacultySchedule() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
