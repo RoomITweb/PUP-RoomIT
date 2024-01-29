@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  getDatabase,
-  ref,
-  get,
-  set,
-  query,
-  orderByChild,
-  equalTo,
-} from 'firebase/database';
+import { getDatabase, ref, get, set, query, orderByChild, equalTo } from 'firebase/database';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { app } from './firebase';
 import ReactModal from 'react-modal';
@@ -32,7 +24,7 @@ function FacultySchedule() {
 
   const auth = getAuth(app);
   const database = getDatabase(app);
-  ReactModal.setAppElement('#root'); // or any other root element in your HTML
+  ReactModal.setAppElement('#root');
 
   useEffect(() => {
     const fetchData = async (user) => {
@@ -46,13 +38,6 @@ function FacultySchedule() {
             setFacultyName(`${userData.firstName} ${userData.lastName}`);
           }
         }
-
-        // Retrieve roomOccupied and attendingClass states from localStorage
-        const storedRoomOccupied = localStorage.getItem('roomOccupied') === 'true';
-        const storedAttendingClass = localStorage.getItem('attendingClass') === 'true';
-
-        setRoomOccupied(storedRoomOccupied);
-        setAttendingClass(storedAttendingClass);
 
         if (selectedSchoolYear && selectedSemester) {
           const schedulesRef = ref(database, 'schedules');
@@ -103,11 +88,9 @@ function FacultySchedule() {
     setIsScannerOpen(true);
 
     if (subject.room) {
+      setIsScannerOpen(true);
       setScanMessage(`Room: ${subject.room}`);
     }
-
-    // Set attendingClass state to false when opening the scanner
-    setAttendingClass(false);
   };
 
   const handleQrCodeScan = (result) => {
@@ -260,7 +243,7 @@ function FacultySchedule() {
   };
 
   return (
-    <div className="h-screen justify-center flex items-center">
+    <div className='h-screen justify-center flex items-center'>
       <div className="container ">
         <div className="row">
           <div className="col-12">
@@ -279,9 +262,7 @@ function FacultySchedule() {
                       }}
                       value={selectedSchoolYear}
                     >
-                      <option value="" disabled hidden>
-                        Choose a School Year
-                      </option>
+                      <option value="" disabled hidden>Choose a School Year</option>
                       <option value="All">All</option>
                       <option value="2022-2023">2022-2023</option>
                       <option value="2023-2024">2023-2024</option>
@@ -299,9 +280,7 @@ function FacultySchedule() {
                       }}
                       value={selectedSemester}
                     >
-                      <option value="" disabled hidden>
-                        Choose a Semester
-                      </option>
+                      <option value="" disabled hidden>Choose a Semester</option>
                       <option value="All">All</option>
                       <option value="1st Semester">1st Semester</option>
                       <option value="2nd Semester">2nd Semester</option>
@@ -320,9 +299,7 @@ function FacultySchedule() {
                       }}
                       value={selectedDay}
                     >
-                      <option value="" disabled hidden>
-                        Choose a Day
-                      </option>
+                      <option value="" disabled hidden>Choose a Day</option>
                       <option value="All">All</option>
                       <option value="Mon/Wed">Mon/Wed</option>
                       <option value="Tue/Thurs">Tue/Thurs</option>
@@ -374,20 +351,11 @@ function FacultySchedule() {
                           <td>{subject.room}</td>
                           <td>
                             {roomOccupied ? (
-                              <button className="btn btn-danger" onClick={handleEndClass}>
-                                End Class
-                              </button>
+                              <button className="btn btn-danger" onClick={handleEndClass}>End Class</button>
                             ) : attendingClass ? (
-                              <button className="btn btn-primary" onClick={handleAttendClass}>
-                                Attend Class
-                              </button>
+                              <button className="btn btn-primary" onClick={handleAttendClass}>Attend Class</button>
                             ) : (
-                              <button
-                                className="btn btn-success"
-                                onClick={() => handleOpenScanner(subject)}
-                              >
-                                Open Scanner
-                              </button>
+                              <button className="btn btn-success" onClick={() => handleOpenScanner(subject)}>Open Scanner</button>
                             )}
                           </td>
                         </tr>
@@ -415,22 +383,16 @@ function FacultySchedule() {
                 <p className="text-lg font-bold">{scanResult}</p>
               </div>
             )}
-
+            
             {/* Buttons and messages */}
             <div className="mt-4">
               {isScannerOpen && (
-                <button
-                  className="bg-red-600 text-white px-4 py-2 mr-2 sm:mr-0"
-                  onClick={handleCloseScanner}
-                >
+                <button className="bg-red-600 text-white px-4 py-2 mr-2 sm:mr-0" onClick={handleCloseScanner}>
                   Close Scanner
                 </button>
               )}
               {attendingClass && (
-                <button
-                  className="bg-blue-600 text-white px-4 py-2"
-                  onClick={handleAttendClass}
-                >
+                <button className="bg-blue-600 text-white px-4 py-2" onClick={handleAttendClass}>
                   Attend Class
                 </button>
               )}
