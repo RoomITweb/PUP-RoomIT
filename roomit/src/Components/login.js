@@ -8,7 +8,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 import './login_design.css';
 
 const Login = () => {
-  const [loginAs, setLoginAs] = useState('faculty');
+  const [loginAs, setLoginAs] = useState('admin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isForgotPassword, setIsForgotPassword] = useState(false);
