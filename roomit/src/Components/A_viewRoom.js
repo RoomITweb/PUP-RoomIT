@@ -30,6 +30,17 @@ function ViewRoom({ facultySchedules }) {
 
   const handleEndClass = (room) => {
     const roomRef = ref(database, `rooms/${room}`);
+    const historyRef = ref(database, 'history');
+  
+    // Get the current room information
+    const currentRoomInfo = rooms[room];
+  
+    // Move the ended class information to the history collection
+    update(historyRef, {
+      [room]: currentRoomInfo,
+    });
+  
+    // Clear the room information in the current collection
     update(roomRef, {
       facultyName: null,
       subjectCode: null,
@@ -38,6 +49,7 @@ function ViewRoom({ facultySchedules }) {
       day: null,
       time: null,
     });
+  
     setRoomInfoModalOpen(false);
     // Additional logic if needed
   };
