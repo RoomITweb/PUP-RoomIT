@@ -28,30 +28,38 @@ function ViewRoom({ facultySchedules }) {
     };
   }, [database]);
 
-  const handleEndClass = (room) => {
-    const roomRef = ref(database, `rooms/${room}`);
-    const historyRef = ref(database, 'history');
+  const handleEndClass = async () => {
+    setShowScanner(false);
   
-    // Get the current room information
-    const currentRoomInfo = rooms[room];
+    if (auth.currentUser) {
+      const userUid = auth.currentUser.uid;
   
-    // Move the ended class information to the history collection
-    update(historyRef, {
-      [room]: currentRoomInfo,
-    });
+      set(ref(database, `users/${userUid}/occupiedRoom`), null);
   
-    // Clear the room information in the current collection
-    update(roomRef, {
-      facultyName: null,
-      subjectCode: null,
-      subjectDescription: null,
-      course: null,
-      day: null,
-      time: null,
-    });
+      if (selectedSchedule.room) {
+        const timeEnded = Date.now(); // Unix timestamp in milliseconds
   
-    setRoomInfoModalOpen(false);
-    // Additional logic if needed
+        const historyRef = ref(database, `history/${selectedSchedule.room}`);
+        
+        try {
+          // Create a new entry for the specific room in the history collection
+          await set(historyRef, {
+            ...selectedSchedule,
+            timeEnded: timeEnded,
+          });
+  
+          // Clear the room information in the current collection
+          await set(ref(database, `rooms/${selectedSchedule.room}`), null);
+  
+          setRoomOccupied(false);
+          setErrorMessage('');
+          setSuccessMessage('You have successfully ended the class.');
+        } catch (error) {
+          console.error('Error updating history:', error);
+          setErrorMessage('Error ending the class. Please try again.');
+        }
+      }
+    }
   };
 
   const isRoomOccupied = (room) => {
