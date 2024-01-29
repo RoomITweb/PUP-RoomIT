@@ -96,13 +96,13 @@ function FacultySchedule() {
     setSelectedSchedule(subject);
     setShowScanner(true);
     setIsScannerOpen(true);
-
+  
     if (subject.room) {
       setIsScannerOpen(true);
       setScanMessage(`Room: ${subject.room}`);
     }
   };
-
+  
   const handleQrCodeScan = (result) => {
     // Handle the QR code scan result here
     console.log('QR Code Scan Result:', result);
@@ -135,11 +135,11 @@ function FacultySchedule() {
       const userUid = auth.currentUser.uid;
   
       // Check if the room is already occupied
-      const occupiedRoomRef = ref(database, `users/${userUid}/occupiedRoom`);
+      const occupiedRoomRef = ref(database, `rooms/${selectedSchedule.room}`);
       const occupiedRoomSnapshot = await get(occupiedRoomRef);
   
-      if (occupiedRoomSnapshot.exists() && occupiedRoomSnapshot.val() !== selectedSchedule.room) {
-        setErrorMessage('Error: You are already attending a class in another room.');
+      if (occupiedRoomSnapshot.exists()) {
+        setErrorMessage('Error: The room is already occupied.');
         return;
       }
   
