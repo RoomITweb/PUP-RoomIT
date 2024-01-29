@@ -23,7 +23,7 @@ function FacultySchedule() {
   const [successMessage, setSuccessMessage] = useState('');
   // Retrieve the last known roomOccupied state from localStorage
   const initialRoomOccupiedState = localStorage.getItem('roomOccupied') === 'true';
-  const [roomOccupied, setRoomOccupied] = useState(initialRoomOccupiedState);
+  const [roomOccupied, setRoomOccupied] = useState(false);
 
   const auth = getAuth(app);
   const database = getDatabase(app);
