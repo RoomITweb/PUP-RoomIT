@@ -23,7 +23,7 @@ function FacultySchedule() {
   const [successMessage, setSuccessMessage] = useState('');
   // Retrieve the last known roomOccupied state from localStorage
   const initialRoomOccupiedState = localStorage.getItem('roomOccupied') === 'true';
-  const [roomOccupied, setRoomOccupied] = useState(false);
+  const [roomOccupied, setRoomOccupied] = useState(initialRoomOccupiedState);
 
   const auth = getAuth(app);
   const database = getDatabase(app);
@@ -178,6 +178,7 @@ function FacultySchedule() {
 
   
   const handleEndClass = async () => {
+    console.log('Entering handleEndClass');
     setAttendingClass(false);
     setShowScanner(false);
 
@@ -217,8 +218,10 @@ function FacultySchedule() {
 
           await set(ref(database, `rooms/${selectedSchedule.room}`), null);
 
+          console.log('Setting roomOccupied to false');
           setRoomOccupied(false);
           localStorage.removeItem('roomOccupied');
+          console.log('Removed roomOccupied from localStorage');
           setErrorMessage('');
           setSuccessMessage('You have successfully ended the class.');
         } catch (error) {
