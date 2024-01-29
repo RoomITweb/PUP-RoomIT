@@ -218,7 +218,7 @@ function FacultySchedule() {
           await set(ref(database, `rooms/${selectedSchedule.room}`), null);
 
           setRoomOccupied(false);
-          localStorage.removeItem('roomOccupied');
+          localStorage.setItem('roomOccupied', 'false');
           setErrorMessage('');
           setSuccessMessage('You have successfully ended the class.');
         } catch (error) {
