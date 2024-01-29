@@ -220,7 +220,7 @@ function FacultySchedule() {
 
           console.log('Setting roomOccupied to false');
           setRoomOccupied(false);
-          localStorage.setItem('roomOccupied', 'false');
+          localStorage.setItem('roomOccupied');
           console.log('Removed roomOccupied from localStorage');
           setErrorMessage('');
           setSuccessMessage('You have successfully ended the class.');
