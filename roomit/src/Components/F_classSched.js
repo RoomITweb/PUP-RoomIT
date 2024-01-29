@@ -92,6 +92,14 @@ function FacultySchedule() {
     };
   }, [auth, database, facultyName, selectedSchoolYear, selectedSemester]);
 
+  // Load the attendingClass state from localStorage on component mount
+  useEffect(() => {
+    const storedAttendingClass = localStorage.getItem('attendingClass');
+    if (storedAttendingClass) {
+      setAttendingClass(JSON.parse(storedAttendingClass));
+    }
+  }, []);
+
   const handleOpenScanner = (subject) => {
     setSelectedSchedule(subject);
     setShowScanner(true);
@@ -169,6 +177,9 @@ function FacultySchedule() {
       setRoomOccupied(true);
       setSuccessMessage('You have successfully attended the class.');
       setErrorMessage('');
+      // Reset the attendingClass state to false and update localStorage
+    setAttendingClass(true);
+    localStorage.setItem('attendingClass', JSON.stringify(true));
     }
   };
   
@@ -217,6 +228,9 @@ function FacultySchedule() {
           setRoomOccupied(false);
           setErrorMessage('');
           setSuccessMessage('You have successfully ended the class.');
+          // Reset the attendingClass state to false and update localStorage
+          setAttendingClass(false);
+          localStorage.setItem('attendingClass', JSON.stringify(false));
         } catch (error) {
           console.error('Error updating history:', error);
           setErrorMessage('Error ending the class. Please try again.');
