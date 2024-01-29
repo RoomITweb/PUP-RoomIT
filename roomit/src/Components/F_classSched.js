@@ -92,6 +92,14 @@ function FacultySchedule() {
     };
   }, [auth, database, facultyName, selectedSchoolYear, selectedSemester]);
 
+  // Load the attendingClass state from localStorage on component mount
+  useEffect(() => {
+    const storedAttendingClass = localStorage.getItem('attendingClass');
+    if (storedAttendingClass) {
+      setAttendingClass(JSON.parse(storedAttendingClass));
+    }
+  }, []);
+
   const handleOpenScanner = (subject) => {
     setSelectedSchedule(subject);
     setShowScanner(true);
@@ -377,7 +385,7 @@ function FacultySchedule() {
                         <td>{subject.room}</td>
                         <button
                           className={`btn ${attendingClass ? 'btn-danger' : 'btn-success'}`}
-                          onClick={attendingClass ? handleEndClass : () => handleOpenScanner(subject)}
+                          onClick={attendingClass ? handleAttendClass : () => handleOpenScanner(subject)}
                         >
                           {attendingClass ? 'End Class' : 'Start Class'}
                         </button>
