@@ -389,7 +389,9 @@ function FacultySchedule() {
         <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center backdrop-blur-sm bg-gray-200 ">
           <div className="absolute bg-white p-6 rounded-md shadow-md w-3/4 sm:w-3/4 md:w-1/2 lg:w-1/4 border border-5 border-red-800 ">
             <h2 className="text-lg font-semibold mb-4">Open Scanner for:</h2>
-            <h2 className="text-2xl font-bold mb-4">Room {selectedSchedule?.room}</h2>
+            {selectedSchedule && (
+              <h2 className="text-2xl font-bold mb-4">Room {selectedSchedule.room}</h2>
+            )}
             <BarcodeScanner onDecodeResult={handleQrCodeScan} className="mx-auto mb-4 w-full" />
 
             {/* Display the scan result */}
