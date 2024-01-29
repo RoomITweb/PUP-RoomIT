@@ -190,6 +190,7 @@ function ViewRoom({ facultySchedules }) {
           <p>Course: {rooms[selectedRoom].course}</p>
           <p>Day: {rooms[selectedRoom].day}</p>
           <p>Time: {rooms[selectedRoom].time}</p>
+          <button onClick={() => handleEndClass(selectedRoom)}>End Class</button>
         </>
       ) : (
         <>
@@ -220,7 +221,6 @@ function ViewRoom({ facultySchedules }) {
 )}
         </>
       )}
-      <button onClick={() => handleEndClass(selectedRoom)}>End Class</button>
       <button onClick={() => setRoomInfoModalOpen(false)}>Close</button>
     </div>
   </div>
