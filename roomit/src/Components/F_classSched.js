@@ -80,7 +80,7 @@ function FacultySchedule() {
     return () => {
       unsubscribe();
     };
-  }, [auth, database, facultyName, selectedSchoolYear, selectedSemester]);
+  }, [auth, database, facultyName, selectedSchoolYear, selectedSemester, roomOccupied, attendingClass]);
 
   const handleOpenScanner = (subject) => {
     setSelectedSchedule(subject);
