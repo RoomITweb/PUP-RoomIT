@@ -78,6 +78,8 @@ function FacultySchedule() {
           setAttendingClass(true);
         }
 
+        setRoomOccupied(false);
+
         const selectedScheduleRef = ref(database, `rooms`);
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
   
