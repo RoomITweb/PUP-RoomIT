@@ -179,6 +179,7 @@ function FacultySchedule() {
   };
 
   const handleEndClass = async () => {
+    console.log("Selected Schedule:", selectedSchedule);
     setAttendingClass(false);
     setShowScanner(false);
 
