@@ -217,7 +217,7 @@ function FacultySchedule() {
             });
           }
 
-          await set(ref(database, `rooms/${selectedSchedule.room}`), {});
+          await set(ref(database, `rooms/${selectedSchedule.room}`), {roomOccupied});
 
           setRoomOccupied(false);
           setErrorMessage('');
