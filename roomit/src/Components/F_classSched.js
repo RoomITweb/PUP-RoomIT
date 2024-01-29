@@ -23,7 +23,7 @@ function FacultySchedule() {
   const [successMessage, setSuccessMessage] = useState('');
   // Retrieve the last known roomOccupied state from localStorage
   const initialRoomOccupiedState = localStorage.getItem('roomOccupied') === 'true';
-  const [roomOccupied, setRoomOccupied] = useState(false);
+  const [roomOccupied, setRoomOccupied] = useState(initialRoomOccupiedState);
 
   const auth = getAuth(app);
   const database = getDatabase(app);
@@ -113,7 +113,7 @@ function FacultySchedule() {
     if (scanMessage && result.includes(scanMessage)) {
       // Check if the room is already occupied
       if (roomOccupied && selectedSchedule.room !== scanMessage) {
-        setErrorMessage('Error: Room is already occupied by another user.');
+        setErrorMessage('');
         return;
       }
   
