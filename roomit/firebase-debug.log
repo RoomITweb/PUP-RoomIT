@@ -1,0 +1,29 @@
+[debug] [2023-09-13T22:56:42.046Z] ----------------------------------------------------------------------
+[debug] [2023-09-13T22:56:42.052Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\PERPETUOCANTILLANA\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2023-09-13T22:56:42.053Z] CLI Version:   12.5.4
+[debug] [2023-09-13T22:56:42.054Z] Platform:      win32
+[debug] [2023-09-13T22:56:42.055Z] Node Version:  v18.17.1
+[debug] [2023-09-13T22:56:42.057Z] Time:          Thu Sep 14 2023 06:56:42 GMT+0800 (Philippine Standard Time)
+[debug] [2023-09-13T22:56:42.058Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2023-09-13T22:56:42.067Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2023-09-13T22:56:42.252Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2023-09-13T22:56:42.252Z] > authorizing via signed-in user (roomit.web@gmail.com)
+[debug] [2023-09-13T22:56:42.253Z] [iam] checking project roomit-web-app for permissions ["firebase.projects.get","firebasedatabase.instances.update","firebasehosting.sites.update"]
+[debug] [2023-09-13T22:56:42.254Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/roomit-web-app:testIamPermissions [none]
+[debug] [2023-09-13T22:56:42.255Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/roomit-web-app:testIamPermissions x-goog-quota-user=projects/roomit-web-app
+[debug] [2023-09-13T22:56:42.255Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/roomit-web-app:testIamPermissions {"permissions":["firebase.projects.get","firebasedatabase.instances.update","firebasehosting.sites.update"]}
+[debug] [2023-09-13T22:57:04.302Z] *** [apiv2] error from fetch(https://firebase-public.firebaseio.com/cli.json, {"headers":{},"method":"GET"}): FetchError: request to https://firebase-public.firebaseio.com/cli.json failed, reason: connect ETIMEDOUT 2600:1901:0:4d00:::443
+[warn] !  Unable to fetch the CLI MOTD and remote config. 
+[debug] [2023-09-13T22:57:04.304Z] Failed to fetch MOTD FirebaseError: Failed to make request to https://firebase-public.firebaseio.com/cli.json
+[debug] [2023-09-13T22:57:04.336Z] *** [apiv2] error from fetch(https://cloudresourcemanager.googleapis.com/v1/projects/roomit-web-app:testIamPermissions, {"headers":{},"method":"POST","body":"{\"permissions\":[\"firebase.projects.get\",\"firebasedatabase.instances.update\",\"firebasehosting.sites.update\"]}"}): FetchError: request to https://cloudresourcemanager.googleapis.com/v1/projects/roomit-web-app:testIamPermissions failed, reason: connect ETIMEDOUT 2404:6800:4017:805::200a:443
+[debug] [2023-09-13T22:57:04.338Z] [iam] error while checking permissions, command may fail: FirebaseError: Failed to make request to https://cloudresourcemanager.googleapis.com/v1/projects/roomit-web-app:testIamPermissions
+[debug] [2023-09-13T22:57:04.344Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/roomit-web-app [none]
+[debug] [2023-09-13T22:57:26.452Z] *** [apiv2] error from fetch(https://firebase.googleapis.com/v1beta1/projects/roomit-web-app, {"headers":{},"method":"GET","signal":{}}): FetchError: request to https://firebase.googleapis.com/v1beta1/projects/roomit-web-app failed, reason: connect ETIMEDOUT 2404:6800:4017:801::200a:443
+[debug] [2023-09-13T22:57:26.453Z] Failed to make request to https://firebase.googleapis.com/v1beta1/projects/roomit-web-app (original: request to https://firebase.googleapis.com/v1beta1/projects/roomit-web-app failed, reason: connect ETIMEDOUT 2404:6800:4017:801::200a:443)
+[debug] [2023-09-13T22:57:31.476Z] Error: Timed out.
+    at Timeout._onTimeout (C:\Users\PERPETUOCANTILLANA\AppData\Roaming\npm\node_modules\firebase-tools\lib\utils.js:254:49)
+    at listOnTimeout (node:internal/timers:569:17)
+    at process.processTimers (node:internal/timers:512:7)
+[error] 
+[error] Error: An unexpected error has occurred.

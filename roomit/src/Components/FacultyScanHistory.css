@@ -1,0 +1,18 @@
+
+
+@media print {
+    body * {
+      visibility: hidden;
+    }
+  
+    .table-container, .table-container * {
+      visibility: visible;
+    }
+  
+    .table-container {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+  }
+  

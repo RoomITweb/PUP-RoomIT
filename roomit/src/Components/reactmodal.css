@@ -1,0 +1,11 @@
+@media (max-width: 768px) {
+    ReactModal__Overlay {
+      align-items: center;
+      justify-content: center;
+    }
+  
+    ReactModal__Content {
+      max-width: 90%;
+    }
+  }
+  

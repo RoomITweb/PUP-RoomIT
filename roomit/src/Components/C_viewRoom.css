@@ -1,0 +1,291 @@
+body{
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif, sans-serif;
+    margin: 0;
+    padding: 10;
+    background-color: #fcfcfc;
+}
+
+.nav {
+    background-color: #fcfcfc;
+    color: #e9e9e9;
+    padding: 10px 0;   
+}
+
+.navButton {
+  font-family: 'Semibold', sans-serif;
+}
+
+/*functions*/
+.room-checker-dashboard{
+    width: 99%;
+    margin: auto;
+    padding: 25px 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center the navigation links horizontally */
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Style the logo */
+.Roomit_Logo img {
+    width: 200px;
+    cursor: pointer;
+}
+
+.room-checker-dashboard ul li {
+    list-style: none;
+    display: inline-block;
+    margin: 0 20px;
+    position: relative;
+}
+
+.room-checker-dashboard ul li a {
+    font-size: 15px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    text-decoration: none;
+    color: #3d3d3d;
+}
+.room-checker-dashboard ul li ::after{
+    content: '';
+    height: 3px;
+    width: 0%;
+    background: #8b2727;
+    position: absolute;
+    left: 0;
+    bottom: -10px;
+    transition: 0.5s;
+
+}
+.room-checker-dashboardul li :hover::after{
+    width: 100%;
+}
+.user-pic{
+    width: 15px;
+    cursor: pointer;
+    margin-left: 30px;
+}
+.h1{
+    margin-top: 58px;
+    color: #3d3d3d;
+    font-size: 24px;
+    margin-bottom: 20px;
+    margin-left: 28.5%;
+}
+.h2{
+    margin-top: 58px;
+    color: #3d3d3d;
+    font-size: 28px;
+    margin-bottom: 20px;
+    margin-left: 0%;
+    display: flex;
+    align-items:center;
+}
+.content {
+    color: #3d3d3d;
+    max-width: 800 px;
+    width: 100%;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Style the table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table th, table td {
+    padding: 10px;
+    text-align: left;
+}
+
+table th {
+    background-color: #8b2727;
+    color: #fff;
+}
+
+table tbody tr:nth-child(even) {
+    background-color: white;
+}
+
+table tbody tr:hover {
+    background-color: #ddd;
+}
+
+/* Legend Styling */
+.legend {
+    display: flex;
+    justify-content: space-between;
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+
+.room-legend {
+    margin-bottom: 20px;
+}
+
+  /* Room Cards */
+  .room-card {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    padding: 20px;
+    margin-bottom: 0px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Semibold', sans-serif;
+    transition: background-color 0.3s ease;
+  }
+  
+  .room-card.occupied {
+    background-color: #ff6b6b; /* Red for occupied rooms */
+    color: #fff;
+  }
+  
+  .room-card.available {
+    background-color: #68b468; /* Green for available rooms */
+    color: #fff;
+  }
+  
+  .room-card:hover {
+    background-color: #ddd; /* Light gray on hover */
+  }
+  
+    .room-container{
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        
+    }
+
+  /* Room Info Modal */
+  .room-info-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .room-info-content {
+    background-color: #fff;
+    padding: 20px;
+    max-width: 700px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+
+    position: absolute;
+    left: 71%;
+    transform: translateX(-50%);
+    margin-left: -350px; /* Half of the max-width */
+  }
+  
+  .room-info-content button {
+    background-color: #8b2727;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .room-info-content button:hover {
+    background-color: #5c1e1e; /* Darker red on hover */
+  }
+
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: #fff;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  }
+  
+  .dropdown-menu.show {
+    display: block;
+  }
+
+.arrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.arrow.up {
+  transform: rotate(180deg);
+}
+
+/* Mobile Phones (Portrait) */
+@media (max-width: 576px) {
+  body {
+    padding: 5px; /* Adjust body padding for smaller screens */
+  }
+
+  .room-checker-dashboard {
+    width: 95%; /* Adjust the width as needed for smaller screens */
+    padding: 15px 0; /* Increase padding for smaller screens */
+  }
+
+  /* Adjust font sizes */
+  .h1 {
+    font-size: 20px;
+    margin-left: 5%;
+  }
+
+  .h2 {
+    font-size: 24px;
+    margin-left: 0;
+  }
+
+  /* Adjust logo size */
+  .Roomit_Logo img {
+    width: 150px;
+  }
+
+  /* Adjust table styles */
+  table th, table td {
+    padding: 8px;
+  }
+}
+
+/* Mobile Phones (Landscape) and Small Tablets */
+@media (max-width: 768px) {
+  .room-checker-dashboard {
+    width: 90%; /* Adjust the width as needed */
+  }
+}
+
+/* Laptops and desktops */
+@media (min-width: 992px) {
+
+
+  .room-checker-dashboard {
+    width: 90%; /* Adjust the width as needed */
+  }
+}
+
+/* Larger desktops and high-resolution screens */
+@media (min-width: 1200px) {
+  .room-checker-dashboard {
+    width: 90%; /* Adjust the width as needed */
+  }
+}
