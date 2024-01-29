@@ -384,10 +384,10 @@ function FacultySchedule() {
                         <td>{subject.building}</td>
                         <td>{subject.room}</td>
                         <button
-                          className={`btn ${attendingClass ? 'btn-danger' : 'btn-success'}`}
-                          onClick={attendingClass ? handleAttendClass : () => handleOpenScanner(subject)}
+                          className={`btn ${attendingClass ? 'btn-success' : 'btn-danger'}`}
+                          onClick={attendingClass ? handleEndClass : () => handleOpenScanner(subject)}
                         >
-                          {attendingClass ? 'End Class' : 'Start Class'}
+                          {attendingClass ? 'Start Class' : 'End Class'}
                         </button>
                       </tr>
                     ))}
