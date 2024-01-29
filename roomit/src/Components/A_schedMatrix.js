@@ -32,55 +32,74 @@ function ViewScheduleMatrix({ schedules }) {
   // Define the days of the week with full names
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  // Define a CSS class for cells with schedules
-  const cellWithScheduleStyle = {
-    backgroundColor: 'maroon', // Set your desired background color
-    color: 'white',
+  // Define dedicated colors for each schedule
+  const scheduleColors = {
+    'GEED23420 - ROTC': 'indianred',
+    'INTE30073 - Information and Assurance Security 2': 'peru',
+    'COMP8097 - Object Oriented Programming': 'cornflowerblue',
+    'GEED10073 - Art Appreciation': 'maroon',
+    'COMP8274 - Electrical Planning': 'coral',
+    'PHED10042 - Team Sports': 'darksalmon',
+    'GEED10083 - Science, Technology and Society': 'lightcoral',
+    'ENG0110 - Circuits And Wirings': 'lightskyblue ',
+    'GEED123 - Understanding the Self': 'plum',
+    // Add more schedules and colors as needed
   };
 
   return (
     <div>
       <h2>Schedule Matrix</h2>
-      <table className="table table-bordered" style={{ width: '100%'}}>
+      <table className="table table-bordered" style={{ width: '100%' }}>
         <thead>
           <tr>
-            <th>Time</th>
+            <th style={{ width: '10%' }}>Time </th>
             {daysOfWeek.map((day, index) => (
               <th key={index}>{day}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {Array.from({ length: 16 }, (_, hourIndex) => (
-            <tr key={hourIndex}>
-              <td>{`${(7 + hourIndex) % 12 || 12}:00 ${(hourIndex < 6 || hourIndex >= 18) ? 'am' : 'pm'} - ${(8 + hourIndex) % 12 || 12}:00 ${(hourIndex < 5 || hourIndex >= 17) ? 'am' : 'pm'}`}</td>
-              {daysOfWeek.map((day, dayIndex) => (
-                <td key={dayIndex}>
-                  {scheduleByDay[day] &&
-                    scheduleByDay[day].map((filteredSchedule, index) => {
-                      const scheduleStartTime = moment(filteredSchedule.time.split(' - ')[0], 'h:mma');
-                      const scheduleEndTime = moment(filteredSchedule.time.split(' - ')[1], 'h:mma');
-                      const cellStartTime = moment(`${(7 + hourIndex) % 12 || 12}:00 ${(hourIndex < 6 || hourIndex >= 18) ? 'am' : 'pm'}`, 'h:mma');
-                      const cellEndTime = moment(`${(8 + hourIndex) % 12 || 12}:00 ${(hourIndex < 5 || hourIndex >= 17) ? 'am' : 'pm'}`, 'h:mma');
+          {Array.from({ length: 32 }, (_, halfHourIndex) => {
+            const startTimeHour = (Math.floor(7 + halfHourIndex / 2) % 12 || 12);
+            const startTimeMeridiem = halfHourIndex < 10 ? 'am' : 'pm'; // Start at 7:30 am
 
-                      if (
-                        scheduleStartTime.isSameOrBefore(cellEndTime) && scheduleEndTime.isSameOrAfter(cellStartTime)
-                      ) {
-                        return (
-                          <div key={index} style={cellWithScheduleStyle}>
-                            <p>{`${filteredSchedule.time}`}</p>
-                            <p>{`${filteredSchedule.subjectCode} - ${filteredSchedule.subjectDescription}`}</p>
-                            <p>{`${filteredSchedule.facultyName}`}</p>
-                            <p>{`${filteredSchedule.course}`}</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    })}
-                </td>
-              ))}
-            </tr>
-          ))}
+            const startTime = `${startTimeHour}:${(halfHourIndex % 2 === 0) ? '00' : '30'} ${startTimeMeridiem}`;
+
+            // Move the declarations outside the loop
+            const cellStartTime = moment(startTime, 'h:mma');
+
+            return (
+              <tr key={halfHourIndex}>
+                <td>{`${startTime}`}</td>
+                {daysOfWeek.map((day, dayIndex) => {
+                  return (
+                    <td key={dayIndex}>
+                      {scheduleByDay[day] &&
+                        scheduleByDay[day].map((filteredSchedule, index) => {
+                          const scheduleStartTime = moment(filteredSchedule.time.split(' - ')[0], 'h:mma');
+                          const scheduleEndTime = moment(filteredSchedule.time.split(' - ')[1], 'h:mma');
+
+                          if (scheduleStartTime.isSameOrBefore(cellStartTime) && scheduleEndTime.isSameOrAfter(cellStartTime)) {
+                            const scheduleKey = `${filteredSchedule.subjectCode} - ${filteredSchedule.subjectDescription}`;
+                            const scheduleColor = scheduleColors[scheduleKey] || 'maroon'; // Default color is maroon
+
+                            return (
+                              <div key={index} style={{ backgroundColor: scheduleColor, color: 'white' }}>
+                                <p>{`${filteredSchedule.time}`}</p>
+                                <p>{`${filteredSchedule.subjectCode} - ${filteredSchedule.subjectDescription}`}</p>
+                                <p>{`${filteredSchedule.facultyName}`}</p>
+                                <p>{`${filteredSchedule.course}`}</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
