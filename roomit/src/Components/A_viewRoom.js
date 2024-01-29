@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getDatabase, ref, onValue } from 'firebase/database';
+import { getDatabase, ref, onValue, update } from 'firebase/database';
 import { app } from './firebase';
 import './C_viewRoom.css';
 import 'bootstrap/dist/css/bootstrap.css';
@@ -27,6 +27,20 @@ function ViewRoom({ facultySchedules }) {
       // sa pag-unmount ng component.
     };
   }, [database]);
+
+  const handleEndClass = (room) => {
+    const roomRef = ref(database, `rooms/${room}`);
+    update(roomRef, {
+      facultyName: null,
+      subjectCode: null,
+      subjectDescription: null,
+      course: null,
+      day: null,
+      time: null,
+    });
+    setRoomInfoModalOpen(false);
+    // Additional logic if needed
+  };
 
   const isRoomOccupied = (room) => {
     if (rooms[room] && rooms[room].facultyName) {
@@ -206,6 +220,7 @@ function ViewRoom({ facultySchedules }) {
 )}
         </>
       )}
+      <button onClick={() => handleEndClass(selectedRoom)}>End Class</button>
       <button onClick={() => setRoomInfoModalOpen(false)}>Close</button>
     </div>
   </div>
