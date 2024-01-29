@@ -70,15 +70,11 @@ function FacultySchedule() {
 
         if (occupiedRoomSnapshot.exists()) {
           setRoomOccupied(true);
-        } else {
-          setRoomOccupied(false);
-        }
+        } 
 
         if (attendingClassSnapshot.exists()) {
           setAttendingClass(true);
         }
-
-        setRoomOccupied(false);
 
         const selectedScheduleRef = ref(database, `rooms`);
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
@@ -195,36 +191,42 @@ function FacultySchedule() {
 
     if (auth.currentUser) {
       const userUid = auth.currentUser.uid;
-  
+
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
-  
+
       if (selectedSchedule.room) {
         const timeEnded = Date.now(); // Unix timestamp in milliseconds
-  
-        const selectedScheduleRef = ref(database, `rooms/${selectedSchedule.room}`);
+
+        const historyRef = ref(database, `history`);
+
         try {
-          // Fetch the specific room information from the rooms node
-          const selectedScheduleSnapshot = await get(selectedScheduleRef);
-  
-          if (selectedScheduleSnapshot.exists()) {
-            const selectedScheduleData = selectedScheduleSnapshot.val();
-  
-            // Update the existing entry for the specific room in history
-            const historyRef = ref(database, `history`);
+          const historySnapshot = await get(historyRef);
+
+          if (historySnapshot.exists()) {
+            const historyData = historySnapshot.val();
+
+            // Update the existing entry for the specific room
+            await set(ref(database, `rooms/${selectedSchedule.room}`), null);
             await set(historyRef, {
-              ...selectedScheduleData,
-              timeEnded: timeEnded,
+              ...historyData,
+              [timeEnded.toString()]: {
+                ...selectedSchedule,
+                timeEnded: timeEnded,
+              },
             });
-  
-            // Remove the entry from the rooms node
-            await set(selectedScheduleRef, null);
-  
-            setRoomOccupied(false);
-            setErrorMessage('');
-            setSuccessMessage('You have successfully ended the class.');
           } else {
-            setErrorMessage('Error ending the class. Room information not found.');
+            // Create a new entry for the specific room
+            await set(historyRef, {
+              [timeEnded.toString()]: {
+                ...selectedSchedule,
+                timeEnded: timeEnded,
+              },
+            });
           }
+
+          setRoomOccupied(false);
+          setErrorMessage('');
+          setSuccessMessage('You have successfully ended the class.');
         } catch (error) {
           console.error('Error updating history:', error);
           setErrorMessage('Error ending the class. Please try again.');
@@ -232,6 +234,7 @@ function FacultySchedule() {
       }
     }
   };
+
 
   const filterSchedulesByDay = (day) => {
     if (day === 'All') {
