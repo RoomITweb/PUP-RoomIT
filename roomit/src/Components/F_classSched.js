@@ -14,7 +14,6 @@ function FacultySchedule() {
   const [showScanner, setShowScanner] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [attendingClass, setAttendingClass] = useState(false);
-  const [roomOccupied, setRoomOccupied] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scanMessage, setScanMessage] = useState('');
   const [selectedDay, setSelectedDay] = useState('');
@@ -22,6 +21,9 @@ function FacultySchedule() {
   const [selectedSemester, setSelectedSemester] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  // Retrieve the last known roomOccupied state from localStorage
+  const initialRoomOccupiedState = localStorage.getItem('roomOccupied') === 'true';
+  const [roomOccupied, setRoomOccupied] = useState(initialRoomOccupiedState);
 
   const auth = getAuth(app);
   const database = getDatabase(app);
@@ -91,14 +93,6 @@ function FacultySchedule() {
       unsubscribe();
     };
   }, [auth, database, facultyName, selectedSchoolYear, selectedSemester]);
-
-  // Load the attendingClass state from localStorage on component mount
-  useEffect(() => {
-    const storedAttendingClass = localStorage.getItem('attendingClass');
-    if (storedAttendingClass) {
-      setAttendingClass(JSON.parse(storedAttendingClass));
-    }
-  }, []);
 
   const handleOpenScanner = (subject) => {
     setSelectedSchedule(subject);
@@ -175,11 +169,9 @@ function FacultySchedule() {
       await set(ref(database, `users/${userUid}/occupiedRoom`), selectedSchedule.room);
   
       setRoomOccupied(true);
+      localStorage.setItem('roomOccupied', 'true');
       setSuccessMessage('You have successfully attended the class.');
       setErrorMessage('');
-      // Reset the attendingClass state to false and update localStorage
-    setAttendingClass(true);
-    localStorage.setItem('attendingClass', JSON.stringify(true));
     }
   };
   
@@ -226,11 +218,9 @@ function FacultySchedule() {
           await set(ref(database, `rooms/${selectedSchedule.room}`), null);
 
           setRoomOccupied(false);
+          localStorage.removeItem('roomOccupied');
           setErrorMessage('');
           setSuccessMessage('You have successfully ended the class.');
-          // Reset the attendingClass state to false and update localStorage
-          setAttendingClass(false);
-          localStorage.setItem('attendingClass', JSON.stringify(false));
         } catch (error) {
           console.error('Error updating history:', error);
           setErrorMessage('Error ending the class. Please try again.');
@@ -383,12 +373,15 @@ function FacultySchedule() {
                         <td>{subject.time}</td>
                         <td>{subject.building}</td>
                         <td>{subject.room}</td>
-                        <button
-                          className={`btn ${attendingClass ? 'btn-success' : 'btn-danger'}`}
-                          onClick={attendingClass ? handleAttendClass : () => handleOpenScanner(subject)}
-                        >
-                          {attendingClass ? 'Start Class' : 'End Class'}
-                        </button>
+                        <td>
+                          {roomOccupied ? (
+                            <button className="btn btn-danger" onClick={handleEndClass}>End Class</button>
+                          ) : attendingClass ? (
+                            <button className="btn btn-primary" onClick={handleAttendClass}>Attend Class</button>
+                          ) : (
+                            <button className="btn btn-success" onClick={() => handleOpenScanner(subject)}>Open Scanner</button>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
