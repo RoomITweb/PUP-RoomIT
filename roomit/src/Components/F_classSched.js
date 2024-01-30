@@ -215,8 +215,8 @@ function FacultySchedule() {
       // I-update ang room sa Firebase
       console.log('Updating room in Firebase:', selectedSchedule.room);
       await set(ref(database, `rooms/${selectedSchedule.room}`), null)
-        .then(() => console.log('Room updated successfully'))
-        .catch((error) => console.error('Error updating room:', error));
+      .then(() => console.log('Room updated successfully'))
+      .catch((error) => console.error('Error updating room:', error));
   
       // Kunin ang kasaysayan na ref
       const historyRef = ref(database, `history`);
