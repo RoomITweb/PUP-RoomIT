@@ -9,7 +9,7 @@ function FacultySchedule() {
   const [facultyName, setFacultyName] = useState('');
   const [facultySchedules, setFacultySchedules] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSchedule, setSelectedSchedule] = useState('');
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [showScanner, setShowScanner] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [attendingClass, setAttendingClass] = useState(false);
