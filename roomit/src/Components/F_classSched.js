@@ -68,18 +68,21 @@ function FacultySchedule() {
         const attendingClassRef = ref(database, `users/${user.uid}/attendingClass`);
         const attendingClassSnapshot = await get(attendingClassRef);
 
-        const selectedScheduleRef = ref(database, `rooms`);
-        const selectedScheduleSnapshot = await get(selectedScheduleRef);
-
+        if (occupiedRoomSnapshot.exists()) {
+          setRoomOccupied(true);
+        } else {
+          setRoomOccupied(false);
+        }
 
         if (attendingClassSnapshot.exists()) {
           setAttendingClass(true);
         }
+
+        const selectedScheduleRef = ref(database, `rooms`);
+        const selectedScheduleSnapshot = await get(selectedScheduleRef);
   
-        if (selectedScheduleSnapshot.exists() && occupiedRoomSnapshot.exists()) {
-          setRoomOccupied(true);
-        } else {
-          setRoomOccupied(false);
+        if (selectedScheduleSnapshot.exists()) {
+          handleEndClass(); // Tawagin ang handleEndClass bilang isang function
         }
 
       } catch (error) {
@@ -192,7 +195,7 @@ function FacultySchedule() {
   
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
   
-      if (selectedSchedule) {
+      if (selectedSchedule.room) {
         const timeEnded = Date.now(); // Unix timestamp in milliseconds
   
         const historyRef = ref(database, `history`);
@@ -376,11 +379,11 @@ function FacultySchedule() {
                           <td>{subject.building}</td>
                           <td>{subject.room}</td>
                           <td>
-                          {roomOccupied ? (
-                              <button className="btn btn-danger" onClick={handleEndClass}>End Class</button>
-                          ) : (
+                            {roomOccupied ? (
+                              <button className="btn btn-danger" onClick={() => handleEndClass()}>End Class</button>
+                            ) : (
                               <button className="btn btn-success" onClick={() => handleOpenScanner(subject)}>Open Scanner</button>
-                          )}
+                            )}
                           </td>
                         </tr>
                       ))}
