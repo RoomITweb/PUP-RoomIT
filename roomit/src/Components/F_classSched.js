@@ -87,8 +87,6 @@ function FacultySchedule() {
 
         if (attendingClassSnapshot.exists()) {
           setAttendingClass(true);
-        } else {
-          setAttendingClass(false);
         }
 
         if (selectedScheduleSnapshot.exists() && occupiedRoomSnapshot.exists()) {
