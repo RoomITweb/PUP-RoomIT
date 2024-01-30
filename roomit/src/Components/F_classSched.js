@@ -77,13 +77,15 @@ function FacultySchedule() {
         }
 
         const selectedScheduleRef = ref(database, `rooms/${selectedSchedule.room}`);
-      const selectedScheduleSnapshot = await get(selectedScheduleRef);
-
-      if (selectedScheduleSnapshot.exists()) {
-        const selectedScheduleData = selectedScheduleSnapshot.val();
-        setSelectedSchedule(selectedScheduleData);
-        handleEndClass();
-      }
+        const selectedScheduleSnapshot = await get(selectedScheduleRef);
+  
+        if (selectedScheduleSnapshot.exists()) {
+          const selectedScheduleData = selectedScheduleSnapshot.val();
+          setSelectedSchedule(selectedScheduleData);
+          if (selectedScheduleData && selectedScheduleData.room) {
+            handleEndClass();
+          }
+        }
 
       } catch (error) {
         console.error('Error fetching data:', error);
