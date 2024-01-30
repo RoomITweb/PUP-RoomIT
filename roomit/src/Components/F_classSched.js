@@ -82,8 +82,7 @@ function FacultySchedule() {
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
   
         if (selectedScheduleSnapshot.exists()) {
-          const selectedScheduleData = selectedScheduleSnapshot.val();
-          setSelectedSchedule(selectedScheduleData);
+          handleEndClass(); // Tawagin ang handleEndClass bilang isang function
         }
 
       } catch (error) {
