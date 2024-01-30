@@ -85,8 +85,10 @@ function FacultySchedule() {
         console.log('roomOccupied', roomOccupied);
         console.log('attendingClass', attendingClass);
 
-        if (!attendingClassSnapshot.exists()) {
+        if (attendingClassSnapshot.exists()) {
           setAttendingClass(true);
+        } else {
+          setAttendingClass(false);
         }
 
         if (selectedScheduleSnapshot.exists() && occupiedRoomSnapshot.exists()) {
@@ -212,6 +214,7 @@ function FacultySchedule() {
       const userUid = auth.currentUser.uid;
 
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
+      set(ref(database, `users/${userUid}/attendingClass`), null);
 
       if (selectedSchedule) {
         const timeEnded = Date.now();
