@@ -81,8 +81,8 @@ function FacultySchedule() {
         const selectedScheduleRef = ref(database, `rooms`);
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
   
-        if (selectedScheduleSnapshot.exists()) {
-          handleEndClass(); // Tawagin ang handleEndClass bilang isang function
+        if (selectedScheduleSnapshot.exists() && !roomOccupied) {
+          setRoomOccupied(true);
         }
 
       } catch (error) {
