@@ -80,6 +80,7 @@ function FacultySchedule() {
           setRoomOccupied(true);
         } else {
           setRoomOccupied(false);
+          setAttendingClass(false);
         }
 
       } catch (error) {
