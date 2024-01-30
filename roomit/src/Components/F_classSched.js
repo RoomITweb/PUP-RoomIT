@@ -192,7 +192,7 @@ function FacultySchedule() {
   
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
   
-      if (selectedSchedule && selectedSchedule.room) {
+      if (selectedSchedule) {
         const timeEnded = Date.now(); // Unix timestamp in milliseconds
   
         const historyRef = ref(database, `history`);
