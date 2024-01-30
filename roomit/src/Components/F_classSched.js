@@ -70,21 +70,19 @@ function FacultySchedule() {
 
         if (occupiedRoomSnapshot.exists()) {
           setRoomOccupied(true);
-        } 
+        } else {
+          setRoomOccupied(false);
+        }
 
         if (attendingClassSnapshot.exists()) {
           setAttendingClass(true);
         }
 
-        const selectedScheduleRef = ref(database, `rooms/${selectedSchedule.room}`);
+        const selectedScheduleRef = ref(database, `rooms`);
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
   
         if (selectedScheduleSnapshot.exists()) {
-          const selectedScheduleData = selectedScheduleSnapshot.val();
-          setSelectedSchedule(selectedScheduleData);
-          if (selectedScheduleData && selectedScheduleData.room) {
-            handleEndClass();
-          }
+          handleEndClass(); // Tawagin ang handleEndClass bilang isang function
         }
 
       } catch (error) {
@@ -208,7 +206,7 @@ function FacultySchedule() {
           if (historySnapshot.exists()) {
             const historyData = historySnapshot.val();
   
-            // Remove the entry for the specific room
+            // Update the existing entry for the specific room
             await set(ref(database, `rooms/${selectedSchedule.room}`), null);
             await set(historyRef, {
               ...historyData,
