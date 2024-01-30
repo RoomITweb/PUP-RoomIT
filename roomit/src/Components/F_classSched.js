@@ -5,7 +5,9 @@ import { app } from './firebase';
 import ReactModal from 'react-modal';
 import BarcodeScanner from './BarcodeScanner';
 
+// React component para sa schedule ng faculty
 function FacultySchedule() {
+  // State variables para sa data ng faculty schedule at iba pa.
   const [facultyName, setFacultyName] = useState('');
   const [facultySchedules, setFacultySchedules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,19 +18,22 @@ function FacultySchedule() {
   const [roomOccupied, setRoomOccupied] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scanMessage, setScanMessage] = useState('');
-  const [selectedDay, setSelectedDay] = useState('');
-  const [selectedSchoolYear, setSelectedSchoolYear] = useState('');
-  const [selectedSemester, setSelectedSemester] = useState('');
+  const [selectedDay, setSelectedDay] = useState('All');
+  const [selectedSchoolYear, setSelectedSchoolYear] = useState('All');
+  const [selectedSemester, setSelectedSemester] = useState('All');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Firebase authentication at database
   const auth = getAuth(app);
   const database = getDatabase(app);
   ReactModal.setAppElement('#root');
 
+  // Effect hook para sa pag-fetch ng data
   useEffect(() => {
     const fetchData = async (user) => {
       try {
+        // Kunin ang user data mula sa database
         const userRef = ref(database, `users/${user.uid}`);
         const userSnapshot = await get(userRef);
 
@@ -39,6 +44,7 @@ function FacultySchedule() {
           }
         }
 
+        // Kunin ang faculty schedules base sa school year at semester
         if (selectedSchoolYear && selectedSemester) {
           const schedulesRef = ref(database, 'schedules');
           const facultyScheduleQuery = query(
@@ -62,6 +68,8 @@ function FacultySchedule() {
             setFacultySchedules(facultySchedules);
           }
         }
+
+        // Check kung may ini-occupy na room at kung naka-attend ng class
         const occupiedRoomRef = ref(database, `users/${user.uid}/occupiedRoom`);
         const occupiedRoomSnapshot = await get(occupiedRoomRef);
 
@@ -71,17 +79,21 @@ function FacultySchedule() {
         const selectedScheduleRef = ref(database, `rooms`);
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
 
+        console.log('occupiedRoomSnapshot', occupiedRoomSnapshot.val());
+        console.log('attendingClassSnapshot', attendingClassSnapshot.val());
+        console.log('selectedScheduleSnapshot', selectedScheduleSnapshot.val());
+        console.log('roomOccupied', roomOccupied);
+        console.log('attendingClass', attendingClass);
 
         if (attendingClassSnapshot.exists()) {
           setAttendingClass(true);
         }
-  
+
         if (selectedScheduleSnapshot.exists() && occupiedRoomSnapshot.exists()) {
           setRoomOccupied(true);
         } else {
           setRoomOccupied(false);
         }
-
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -89,6 +101,7 @@ function FacultySchedule() {
       }
     };
 
+    // Subscription sa authentication state changes
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         fetchData(user);
@@ -97,11 +110,13 @@ function FacultySchedule() {
       }
     });
 
+    // Cleanup function para sa unsubscribe kapag nag-unmount ang component
     return () => {
       unsubscribe();
     };
   }, [auth, database, facultyName, selectedSchoolYear, selectedSemester, roomOccupied, attendingClass, selectedSchedule]);
 
+  // Function para sa pagbukas ng scanner at pag-set ng message
   const handleOpenScanner = (subject) => {
     setSelectedSchedule(subject);
     setShowScanner(true);
@@ -113,13 +128,12 @@ function FacultySchedule() {
     }
   };
 
+  // Function para sa pag-process ng result ng QR code scan
   const handleQrCodeScan = (result) => {
-    // Handle the QR code scan result here
     console.log('QR Code Scan Result:', result);
     setScanResult(result);
 
     if (scanMessage && result.includes(scanMessage)) {
-      // Check if the room is already occupied
       if (roomOccupied && selectedSchedule.room !== scanMessage) {
         setErrorMessage('Error: Room is already occupied by another user.');
         return;
@@ -132,6 +146,7 @@ function FacultySchedule() {
     }
   };
 
+  // Function para sa pagsara ng scanner
   const handleCloseScanner = () => {
     setShowScanner(false);
     setScanResult(null);
@@ -140,11 +155,11 @@ function FacultySchedule() {
     setErrorMessage('');
   };
 
+  // Function para sa pag-attend ng class
   const handleAttendClass = async () => {
     if (auth.currentUser) {
       const userUid = auth.currentUser.uid;
 
-      // Check if the room is already occupied
       const occupiedRoomRef = ref(database, `users/${userUid}/occupiedRoom`);
       const occupiedRoomSnapshot = await get(occupiedRoomRef);
 
@@ -153,9 +168,7 @@ function FacultySchedule() {
         return;
       }
 
-      // Get the current date and time
       const currentTime = new Date().toLocaleString();
-
       const scheduleData = {
         schoolYear: selectedSchedule.schoolYear,
         semester: selectedSchedule.semester,
@@ -170,7 +183,6 @@ function FacultySchedule() {
         attendedTime: currentTime,
       };
 
-      // Include the 'attendendTime' field in selectedSchedule
       selectedSchedule.attendTime = currentTime;
 
       await set(ref(database, `rooms/${selectedSchedule.room}`), scheduleData, currentTime);
@@ -182,28 +194,27 @@ function FacultySchedule() {
     }
   };
 
+  // Function para sa pag-end ng class
   const handleEndClass = async () => {
     console.log("Selected Schedule:", selectedSchedule);
     setAttendingClass(false);
     setShowScanner(false);
-  
+
     if (auth.currentUser) {
       const userUid = auth.currentUser.uid;
-  
+
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
-  
+
       if (selectedSchedule) {
-        const timeEnded = Date.now(); // Unix timestamp in milliseconds
-  
+        const timeEnded = Date.now();
         const historyRef = ref(database, `history`);
-  
+
         try {
           const historySnapshot = await get(historyRef);
-  
+
           if (historySnapshot.exists()) {
             const historyData = historySnapshot.val();
-  
-            // Update the existing entry for the specific room
+
             await set(ref(database, `rooms/${selectedSchedule.room}`), null);
             await set(historyRef, {
               ...historyData,
@@ -213,7 +224,6 @@ function FacultySchedule() {
               },
             });
           } else {
-            // Create a new entry for the specific room
             await set(historyRef, {
               [timeEnded.toString()]: {
                 ...selectedSchedule,
@@ -221,12 +231,12 @@ function FacultySchedule() {
               },
             });
           }
-  
+
           console.log("History Entry Added:", {
             ...selectedSchedule,
             timeEnded: timeEnded,
           });
-  
+
           setRoomOccupied(false);
           setErrorMessage('');
           setSuccessMessage('You have successfully ended the class.');
@@ -238,7 +248,7 @@ function FacultySchedule() {
     }
   };
 
-
+  // Function para sa pag-filter ng schedules base sa day
   const filterSchedulesByDay = (day) => {
     if (day === 'All') {
       setFacultySchedules([]);
@@ -249,6 +259,7 @@ function FacultySchedule() {
     setFacultySchedules(filteredSchedules);
   };
 
+  // Function para sa pag-filter ng schedules base sa school year at semester
   const filterSchedulesBySchoolYearAndSemester = (schoolYear, semester) => {
     if (schoolYear === 'All' && semester === 'All') {
       setFacultySchedules([]);
@@ -268,6 +279,7 @@ function FacultySchedule() {
     setFacultySchedules(filteredSchedules);
   };
 
+  // Render ng HTML para sa UI gamit ang mga state variables at functions.
   return (
     <div className='h-screen justify-center flex items-center'>
       <div className="container ">
@@ -292,7 +304,6 @@ function FacultySchedule() {
                       <option value="All">All</option>
                       <option value="2022-2023">2022-2023</option>
                       <option value="2023-2024">2023-2024</option>
-                      {/* Add more options for other school years */}
                     </select>
                   </div>
                 </div>
@@ -311,7 +322,6 @@ function FacultySchedule() {
                       <option value="1st Semester">1st Semester</option>
                       <option value="2nd Semester">2nd Semester</option>
                       <option value="Summer">Summer</option>
-                      {/* Add more options for other semesters */}
                     </select>
                   </div>
                 </div>
@@ -336,12 +346,12 @@ function FacultySchedule() {
                       <option value="Thursday">Thursday</option>
                       <option value="Friday">Friday</option>
                       <option value="Saturday">Saturday</option>
-                      {/* Add more options for other days */}
                     </select>
                   </div>
                 </div>
               </div>
 
+              {/* Display ng UI depende sa loading status at data availability */}
               {loading ? (
                 <p>Loading...</p>
               ) : facultySchedules.length === 0 ? (
@@ -364,6 +374,7 @@ function FacultySchedule() {
                       </tr>
                     </thead>
                     <tbody>
+                      {/* Map through ng faculty schedules para sa bawat row ng table */}
                       {facultySchedules.map((subject, index) => (
                         <tr key={index}>
                           <td>{subject.schoolYear}</td>
@@ -376,11 +387,12 @@ function FacultySchedule() {
                           <td>{subject.building}</td>
                           <td>{subject.room}</td>
                           <td>
-                          {roomOccupied ? (
+                            {/* Display ng button depende sa status ng room occupation */}
+                            {roomOccupied ? (
                               <button className="btn btn-danger" onClick={handleEndClass}>End Class</button>
-                          ) : (
+                            ) : (
                               <button className="btn btn-success" onClick={() => handleOpenScanner(subject)}>Open Scanner</button>
-                          )}
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -393,6 +405,7 @@ function FacultySchedule() {
         </div>
       </div>
 
+      {/* Display ng scanner modal kung kinakailangan */}
       {showScanner && (
         <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center backdrop-blur-sm bg-gray-200 ">
           <div className="absolute bg-white p-6 rounded-md shadow-md w-3/4 sm:w-3/4 md:w-1/2 lg:w-1/4 border border-5 border-red-800 ">
@@ -402,7 +415,7 @@ function FacultySchedule() {
             )}
             <BarcodeScanner onDecodeResult={handleQrCodeScan} className="mx-auto mb-4 w-full" />
 
-            {/* Display the scan result */}
+            {/* Display ng scan result */}
             {scanResult && (
               <div>
                 <p className="text-sm mb-1 font-normal">Scan Result</p>
@@ -410,7 +423,7 @@ function FacultySchedule() {
               </div>
             )}
             
-            {/* Buttons and messages */}
+            {/* Buttons at messages */}
             <div className="mt-4">
               {isScannerOpen && (
                 <button className="bg-red-600 text-white px-4 py-2 mr-2 sm:mr-0" onClick={handleCloseScanner}>
