@@ -69,6 +69,10 @@ function FacultySchedule() {
         const attendingClassSnapshot = await get(attendingClassRef);
 
 
+        if (!occupiedRoomSnapshot.exists()) {
+          setRoomOccupied(false);
+        }
+
         if (attendingClassSnapshot.exists()) {
           setAttendingClass(true);
         }
@@ -79,11 +83,8 @@ function FacultySchedule() {
         console.log("roomOccupied:", roomOccupied);
         console.log("attendingClass:", attendingClass);
 
-        if (selectedScheduleSnapshot.exists() && occupiedRoomSnapshot.exists()) {
+        if (selectedScheduleSnapshot.exists()) {
           setRoomOccupied(true);
-        } else {
-          setRoomOccupied(false);
-          setAttendingClass(false);
         }
 
         console.log("After setting roomOccupied:", roomOccupied);
