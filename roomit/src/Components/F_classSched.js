@@ -139,7 +139,6 @@ function FacultySchedule() {
         return;
       }
 
-      setAttendingClass(true);
       setErrorMessage('');
     } else {
       setErrorMessage('Error: Room not found or invalid QR code.');
@@ -150,7 +149,6 @@ function FacultySchedule() {
   const handleCloseScanner = () => {
     setShowScanner(false);
     setScanResult(null);
-    setAttendingClass(false);
     setScanMessage('');
     setErrorMessage('');
   };
@@ -189,6 +187,7 @@ function FacultySchedule() {
       await set(ref(database, `users/${userUid}/occupiedRoom`), selectedSchedule.room);
 
       setRoomOccupied(true);
+      setAttendingClass(true);
       setSuccessMessage('You have successfully attended the class.');
       setErrorMessage('');
     }
