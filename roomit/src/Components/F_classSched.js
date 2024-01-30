@@ -183,58 +183,70 @@ function FacultySchedule() {
   };
 
   const handleEndClass = async () => {
-    console.log("Selected Schedule:", selectedSchedule);
-    setAttendingClass(false);
-    setShowScanner(false);
+    try {
+      if (!auth.currentUser) {
+        return; // Walang kasalukuyang user, wakasan ang function
+      }
   
-    if (auth.currentUser) {
       const userUid = auth.currentUser.uid;
   
-      set(ref(database, `users/${userUid}/occupiedRoom`), null);
-  
-      if (selectedSchedule && selectedSchedule.room) {
-        const timeEnded = Date.now(); // Unix timestamp in milliseconds
-  
-        const historyRef = ref(database, `history`);
-  
-        try {
-          const historySnapshot = await get(historyRef);
-  
-          if (historySnapshot.exists()) {
-            const historyData = historySnapshot.val();
-  
-            // Update the existing entry for the specific room
-            await set(ref(database, `rooms/${selectedSchedule.room}`), null);
-            await set(historyRef, {
-              ...historyData,
-              [timeEnded.toString()]: {
-                ...selectedSchedule,
-                timeEnded: timeEnded,
-              },
-            });
-          } else {
-            // Create a new entry for the specific room
-            await set(historyRef, {
-              [timeEnded.toString()]: {
-                ...selectedSchedule,
-                timeEnded: timeEnded,
-              },
-            });
-          }
-  
-          console.log("History Entry Added:", {
-            ...selectedSchedule,
-            timeEnded: timeEnded,
-          });
-  
-          setRoomOccupied(false);
-          setErrorMessage('');
-          setSuccessMessage('You have successfully ended the class.');
-        } catch (error) {
-          console.error('Error updating history:', error);
-          setErrorMessage('Error ending the class. Please try again.');
-        }
+      // Siguruhing ang `selectedSchedule` ay hindi undefined
+      if (!selectedSchedule || !selectedSchedule.room) {
+        setErrorMessage('Error: No selected schedule or room found.');
+        return;
       }
+  
+      // Check kung ang user ay umatend sa ibang room na
+      const occupiedRoomRef = ref(database, `users/${userUid}/occupiedRoom`);
+      const occupiedRoomSnapshot = await get(occupiedRoomRef);
+  
+      if (occupiedRoomSnapshot.exists() && occupiedRoomSnapshot.val() !== selectedSchedule.room) {
+        setErrorMessage('Error: You are already attending a class in another room.');
+        return;
+      }
+  
+      // Kunin ang kasalukuyang oras
+      const currentTime = new Date().toLocaleString();
+  
+      // I-update ang 'occupiedRoom' ng user
+      await set(ref(database, `users/${userUid}/occupiedRoom`), null);
+  
+      // I-update ang room sa Firebase
+      await set(ref(database, `rooms/${selectedSchedule.room}`), null);
+  
+      // Kunin ang kasaysayan na ref
+      const historyRef = ref(database, `history`);
+  
+      // Kunin ang kasaysayan snapshot
+      const historySnapshot = await get(historyRef);
+  
+      if (historySnapshot.exists()) {
+        const historyData = historySnapshot.val();
+  
+        // I-update ang kasaysayan
+        await set(historyRef, {
+          ...historyData,
+          [currentTime]: {
+            ...selectedSchedule,
+            timeEnded: currentTime,
+          },
+        });
+      } else {
+        // Gumawa ng bagong entry sa kasaysayan
+        await set(historyRef, {
+          [currentTime]: {
+            ...selectedSchedule,
+            timeEnded: currentTime,
+          },
+        });
+      }
+  
+      setRoomOccupied(false);
+      setErrorMessage('');
+      setSuccessMessage('You have successfully ended the class.');
+    } catch (error) {
+      console.error('Error ending the class:', error);
+      setErrorMessage('Error ending the class. Please try again.');
     }
   };
 
