@@ -9,7 +9,7 @@ function FacultySchedule() {
   const [facultyName, setFacultyName] = useState('');
   const [facultySchedules, setFacultySchedules] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [selectedSchedule, setSelectedSchedule] = useState('');
   const [showScanner, setShowScanner] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [attendingClass, setAttendingClass] = useState(false);
@@ -191,7 +191,6 @@ function FacultySchedule() {
       const userUid = auth.currentUser.uid;
   
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
-      set(ref(database, `rooms/${roomUid}/room`), null);
   
       if (selectedSchedule.room) {
         const timeEnded = Date.now(); // Unix timestamp in milliseconds
