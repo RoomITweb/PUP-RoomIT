@@ -26,12 +26,6 @@ function FacultySchedule() {
   const database = getDatabase(app);
   ReactModal.setAppElement('#root');
 
-  const handleEndClassCallback = (scheduleSnapshot) => {
-    if (scheduleSnapshot.exists()) {
-      handleEndClass();
-    }
-  };
-
   useEffect(() => {
     const fetchData = async (user) => {
       try {
@@ -385,15 +379,13 @@ function FacultySchedule() {
                           <td>{subject.building}</td>
                           <td>{subject.room}</td>
                           <td>
-                          {roomOccupied ? (
-                          selectedScheduleSnapshot.exists() && (
-                            <button className="btn btn-danger" onClick={() => handleEndClassCallback(selectedScheduleSnapshot)}>End Class</button>
-                            )
-                          ) : attendingClass ? (
-                            <button className="btn btn-primary" onClick={handleAttendClass}>Attend Class</button>
-                          ) : (
-                            <button className="btn btn-success" onClick={() => handleOpenScanner(subject)}>Open Scanner</button>
-                          )}
+                            {roomOccupied ? (
+                              <button className="btn btn-danger" onClick={handleEndClass}>End Class</button>
+                            ) : attendingClass ? (
+                              <button className="btn btn-primary" onClick={handleAttendClass}>Attend Class</button>
+                            ) : (
+                              <button className="btn btn-success" onClick={() => handleOpenScanner(subject)}>Open Scanner</button>
+                            )}
                           </td>
                         </tr>
                       ))}
