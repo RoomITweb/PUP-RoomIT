@@ -187,50 +187,44 @@ function FacultySchedule() {
   };
 
   const handleEndClass = async () => {
-    console.log("Selected Schedule:", selectedSchedule);
     setAttendingClass(false);
     setShowScanner(false);
-
+  
     if (auth.currentUser) {
       const userUid = auth.currentUser.uid;
-
+  
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
-
+  
       if (selectedSchedule.room) {
         const timeEnded = Date.now(); // Unix timestamp in milliseconds
-
-        const historyRef = ref(database, `history`);
-
+  
+        const roomsRef = ref(database, `rooms/${selectedSchedule.room}`);
+        const historyRef = ref(database, `history/${selectedSchedule.room}`);
+  
         try {
-          const historySnapshot = await get(historyRef);
-
-          if (historySnapshot.exists()) {
-            const historyData = historySnapshot.val();
-
-            // Update the existing entry for the specific room
-            await set(ref(database, `rooms/${selectedSchedule.room}`), null);
+          // Get the room schedule
+          const roomSnapshot = await get(roomsRef);
+  
+          if (roomSnapshot.exists()) {
+            const roomData = roomSnapshot.val();
+  
+            // Move room schedule to history
             await set(historyRef, {
-              ...historyData,
-              [timeEnded.toString()]: {
-                ...selectedSchedule,
-                timeEnded: timeEnded,
-              },
+              ...roomData,
+              timeEnded: timeEnded,
             });
+  
+            // Remove the room from the 'rooms' node
+            await set(roomsRef, null);
+  
+            setRoomOccupied(false);
+            setErrorMessage('');
+            setSuccessMessage('You have successfully ended the class.');
           } else {
-            // Create a new entry for the specific room
-            await set(historyRef, {
-              [timeEnded.toString()]: {
-                ...selectedSchedule,
-                timeEnded: timeEnded,
-              },
-            });
+            setErrorMessage('Error: Room schedule not found.');
           }
-
-          setRoomOccupied(false);
-          setErrorMessage('');
-          setSuccessMessage('You have successfully ended the class.');
         } catch (error) {
-          console.error('Error updating history:', error);
+          console.error('Error moving room schedule to history:', error);
           setErrorMessage('Error ending the class. Please try again.');
         }
       }
