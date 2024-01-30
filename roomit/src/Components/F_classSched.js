@@ -184,6 +184,7 @@ function FacultySchedule() {
 
   const handleEndClass = async () => {
     try {
+      console.log('Start of handleEndClass');
       if (!auth.currentUser) {
         return; // Walang kasalukuyang user, wakasan ang function
       }
@@ -244,8 +245,10 @@ function FacultySchedule() {
       setRoomOccupied(false);
       setErrorMessage('');
       setSuccessMessage('You have successfully ended the class.');
+      console.log('End of handleEndClass');
     } catch (error) {
       console.error('Error ending the class:', error);
+      console.error('Error in handleEndClass:', error);
       setErrorMessage('Error ending the class. Please try again.');
     }
   };
