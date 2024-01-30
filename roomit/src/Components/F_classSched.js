@@ -380,7 +380,7 @@ function FacultySchedule() {
                           <td>{subject.room}</td>
                           <td>
                             {roomOccupied ? (
-                              <button className="btn btn-danger" onClick={handleEndClass}>End Class</button>
+                              <button className="btn btn-danger" onClick={() => handleEndClass()}>End Class</button>
                             ) : attendingClass ? (
                               <button className="btn btn-primary" onClick={handleAttendClass}>Attend Class</button>
                             ) : (
