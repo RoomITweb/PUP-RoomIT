@@ -81,9 +81,9 @@ function FacultySchedule() {
         const selectedScheduleRef = ref(database, `rooms`);
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
   
-        if (selectedScheduleSnapshot.exists()) {
-          handleEndClass(); // Tawagin ang handleEndClass bilang isang function
-        }
+        {selectedScheduleSnapshot.exists() ? (
+          <button className="btn btn-danger" onClick={handleEndClass}>End Class</button>
+        ) : null}
 
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -380,7 +380,7 @@ function FacultySchedule() {
                           <td>{subject.room}</td>
                           <td>
                             {roomOccupied ? (
-                              <button className="btn btn-danger" onClick={() => handleEndClass()}>End Class</button>
+                              <button className="btn btn-danger" onClick={handleEndClass}>End Class</button>
                             ) : attendingClass ? (
                               <button className="btn btn-primary" onClick={handleAttendClass}>Attend Class</button>
                             ) : (
