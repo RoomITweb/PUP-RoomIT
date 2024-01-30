@@ -9,7 +9,7 @@ function FacultySchedule() {
   const [facultyName, setFacultyName] = useState('');
   const [facultySchedules, setFacultySchedules] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSchedule, setSelectedSchedule] = useState({});
+  const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [showScanner, setShowScanner] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [attendingClass, setAttendingClass] = useState(false);
@@ -68,18 +68,21 @@ function FacultySchedule() {
         const attendingClassRef = ref(database, `users/${user.uid}/attendingClass`);
         const attendingClassSnapshot = await get(attendingClassRef);
 
-        const selectedScheduleRef = ref(database, `rooms`);
-        const selectedScheduleSnapshot = await get(selectedScheduleRef);
-
+        if (occupiedRoomSnapshot.exists()) {
+          setRoomOccupied(true);
+        } else {
+          setRoomOccupied(false);
+        }
 
         if (attendingClassSnapshot.exists()) {
           setAttendingClass(true);
         }
+
+        const selectedScheduleRef = ref(database, `rooms`);
+        const selectedScheduleSnapshot = await get(selectedScheduleRef);
   
-        if (selectedScheduleSnapshot.exists() && occupiedRoomSnapshot.exists()) {
-          setRoomOccupied(true);
-        } else {
-          setRoomOccupied(false);
+        if (selectedScheduleSnapshot.exists()) {
+          handleEndClass(); // Tawagin ang handleEndClass bilang isang function
         }
 
       } catch (error) {
@@ -183,77 +186,58 @@ function FacultySchedule() {
   };
 
   const handleEndClass = async () => {
-    try {
-      console.log('Start of handleEndClass');
+    console.log("Selected Schedule:", selectedSchedule);
+    setAttendingClass(false);
+    setShowScanner(false);
   
-      if (!auth.currentUser) {
-        console.log('No current user');
-        return;
-      }
-  
+    if (auth.currentUser) {
       const userUid = auth.currentUser.uid;
-      console.log('User UID:', userUid);
   
-      // Check kung ang user ay umatend sa ibang room na
-      const occupiedRoomRef = ref(database, `users/${userUid}/occupiedRoom`);
-      const occupiedRoomSnapshot = await get(occupiedRoomRef);
+      set(ref(database, `users/${userUid}/occupiedRoom`), null);
   
-      if (occupiedRoomSnapshot.exists() && occupiedRoomSnapshot.val() !== selectedSchedule.room) {
-        console.log('Already attending a class in another room');
-        setErrorMessage('Error: You are already attending a class in another room.');
-      }
+      if (selectedSchedule.room) {
+        const timeEnded = Date.now(); // Unix timestamp in milliseconds
   
-      // Kunin ang kasalukuyang oras
-      const currentTime = new Date().toLocaleString();
+        const historyRef = ref(database, `history`);
   
-      // I-update ang 'occupiedRoom' ng user
-      console.log('Updating occupiedRoom for user:', userUid);
-      await set(ref(database, `users/${userUid}/occupiedRoom`), null)
-        .then(() => console.log('OccupiedRoom updated successfully'))
-        .catch((error) => console.error('Error updating occupiedRoom:', error));
+        try {
+          const historySnapshot = await get(historyRef);
   
-      // I-update ang room sa Firebase
-      console.log('Updating room in Firebase:', selectedSchedule.room);
-      await set(ref(database, `rooms/${selectedSchedule.room}`), null)
-      .then(() => console.log('Room updated successfully'))
-      .catch((error) => console.error('Error updating room:', error));
+          if (historySnapshot.exists()) {
+            const historyData = historySnapshot.val();
   
-      // Kunin ang kasaysayan na ref
-      const historyRef = ref(database, `history`);
+            // Update the existing entry for the specific room
+            await set(ref(database, `rooms/${selectedSchedule.room}`), null);
+            await set(historyRef, {
+              ...historyData,
+              [timeEnded.toString()]: {
+                ...selectedSchedule,
+                timeEnded: timeEnded,
+              },
+            });
+          } else {
+            // Create a new entry for the specific room
+            await set(historyRef, {
+              [timeEnded.toString()]: {
+                ...selectedSchedule,
+                timeEnded: timeEnded,
+              },
+            });
+          }
   
-      // Kunin ang kasaysayan snapshot
-      const historySnapshot = await get(historyRef);
-  
-      if (historySnapshot.exists()) {
-        const historyData = historySnapshot.val();
-  
-        // I-update ang kasaysayan
-        console.log('Updating history with new entry');
-        await set(historyRef, {
-          ...historyData,
-          [currentTime]: {
+          console.log("History Entry Added:", {
             ...selectedSchedule,
-            timeEnded: currentTime,
-          },
-        });
-      } else {
-        // Gumawa ng bagong entry sa kasaysayan
-        console.log('Creating new history entry');
-        await set(historyRef, {
-          [currentTime]: {
-            ...selectedSchedule,
-            timeEnded: currentTime,
-          },
-        });
-      }
+            timeEnded: timeEnded,
+          });
   
-      setRoomOccupied(false);
-      setErrorMessage('');
-      setSuccessMessage('You have successfully ended the class.');
-      console.log('End of handleEndClass');
-    } catch (error) {
-      console.error('Error in handleEndClass:', error);
-      setErrorMessage('Error ending the class. Please try again.');
+          setRoomOccupied(false);
+          setErrorMessage('');
+          setSuccessMessage('You have successfully ended the class.');
+        } catch (error) {
+          console.error('Error updating history:', error);
+          setErrorMessage('Error ending the class. Please try again.');
+        }
+      }
     }
   };
 
@@ -395,11 +379,11 @@ function FacultySchedule() {
                           <td>{subject.building}</td>
                           <td>{subject.room}</td>
                           <td>
-                          {roomOccupied ? (
-                              <button className="btn btn-danger" onClick={handleEndClass}>End Class</button>
-                          ) : (
+                            {roomOccupied ? (
+                              <button className="btn btn-danger" onClick={() => handleEndClass()}>End Class</button>
+                            ) : (
                               <button className="btn btn-success" onClick={() => handleOpenScanner(subject)}>Open Scanner</button>
-                          )}
+                            )}
                           </td>
                         </tr>
                       ))}
