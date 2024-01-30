@@ -76,12 +76,18 @@ function FacultySchedule() {
         const selectedScheduleRef = ref(database, `rooms`);
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
   
+        console.log("roomOccupied:", roomOccupied);
+        console.log("attendingClass:", attendingClass);
+
         if (selectedScheduleSnapshot.exists() && occupiedRoomSnapshot.exists()) {
           setRoomOccupied(true);
         } else {
           setRoomOccupied(false);
           setAttendingClass(false);
         }
+
+console.log("After setting roomOccupied:", roomOccupied);
+console.log("After setting attendingClass:", attendingClass);
 
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -377,13 +383,13 @@ function FacultySchedule() {
                           <td>{subject.building}</td>
                           <td>{subject.room}</td>
                           <td>
-                            {roomOccupied ? (
+                          {roomOccupied ? (
                               <button className="btn btn-danger" onClick={handleEndClass}>End Class</button>
-                            ) : attendingClass ? (
+                          ) : attendingClass ? (
                               <button className="btn btn-primary" onClick={handleAttendClass}>Attend Class</button>
-                            ) : (
+                          ) : (
                               <button className="btn btn-success" onClick={() => handleOpenScanner(subject)}>Open Scanner</button>
-                            )}
+                          )}
                           </td>
                         </tr>
                       ))}
