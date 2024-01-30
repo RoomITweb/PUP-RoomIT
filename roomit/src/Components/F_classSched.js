@@ -80,17 +80,17 @@ function FacultySchedule() {
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
 
         console.log('occupiedRoomSnapshot', occupiedRoomSnapshot.val());
+        console.log('attendingClassSnapshot', attendingClassSnapshot.val());
         console.log('selectedScheduleSnapshot', selectedScheduleSnapshot.val());
         console.log('roomOccupied', roomOccupied);
         console.log('attendingClass', attendingClass);
 
-        if (attendingClassSnapshot.exists()) {
-          console.log('attendingClassSnapshot', attendingClassSnapshot.val());
+        if (!attendingClassSnapshot.exists()) {
+          setAttendingClass(true);
         }
 
         if (selectedScheduleSnapshot.exists() && occupiedRoomSnapshot.exists()) {
           setRoomOccupied(true);
-          setAttendingClass(true);
         } else {
           setRoomOccupied(false);
         }
@@ -162,6 +162,9 @@ function FacultySchedule() {
       const occupiedRoomRef = ref(database, `users/${userUid}/occupiedRoom`);
       const occupiedRoomSnapshot = await get(occupiedRoomRef);
 
+      const attendingClassRef = ref(database, `users/${userUid}/attendingClass`);
+      const attendingClassSnapshot = await get(attendingClassRef);
+
       if (occupiedRoomSnapshot.exists() && occupiedRoomSnapshot.val() !== selectedSchedule.room) {
         setErrorMessage('Error: You are already attending a class in another room.');
         return;
@@ -183,6 +186,11 @@ function FacultySchedule() {
       };
 
       selectedSchedule.attendTime = currentTime;
+
+      // Set attendingClassRef only if it doesn't exist
+      if (!attendingClassSnapshot.exists()) {
+      await set(attendingClassRef, true);
+    }
 
       await set(ref(database, `rooms/${selectedSchedule.room}`), scheduleData, currentTime);
       await set(ref(database, `users/${userUid}/occupiedRoom`), selectedSchedule.room);
