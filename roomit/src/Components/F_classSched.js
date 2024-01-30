@@ -204,7 +204,7 @@ function FacultySchedule() {
                       }}
                       value={selectedSemester}
                     >
-                      <option value="" disabled hidden>Choose a Semester</option>
+                      <option value="" disabled hidden>Semester</option>
                       <option value="All">All</option>
                       <option value="1st Semester">1st semester</option>
                       <option value="2nd Semester">2nd Semester</option>
