@@ -76,12 +76,14 @@ function FacultySchedule() {
           setAttendingClass(true);
         }
 
-        const selectedScheduleRef = ref(database, `rooms`);
-        const selectedScheduleSnapshot = await get(selectedScheduleRef);
-  
-        if (selectedScheduleSnapshot.exists()) {
-          handleEndClass(); // Tawagin ang handleEndClass bilang isang function
-        }
+        const selectedScheduleRef = ref(database, `rooms/${selectedSchedule.room}`);
+      const selectedScheduleSnapshot = await get(selectedScheduleRef);
+
+      if (selectedScheduleSnapshot.exists()) {
+        const selectedScheduleData = selectedScheduleSnapshot.val();
+        setSelectedSchedule(selectedScheduleData);
+        handleEndClass();
+      }
 
       } catch (error) {
         console.error('Error fetching data:', error);
