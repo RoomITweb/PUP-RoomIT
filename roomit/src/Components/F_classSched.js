@@ -204,9 +204,9 @@ function FacultySchedule() {
                       }}
                       value={selectedSemester}
                     >
-                      <option value="" disabled hidden>Semester</option>
+                      <option value="" disabled hidden>Choose a Semester</option>
                       <option value="All">All</option>
-                      <option value="1st Semester">1st semester</option>
+                      <option value="1st Semester">1st Semester</option>
                       <option value="2nd Semester">2nd Semester</option>
                       <option value="Summer">Summer</option>
                       {/* Add more options for other semesters */}
@@ -276,9 +276,9 @@ function FacultySchedule() {
                           <td>
                             {roomOccupied ? (
                               <button className="btn btn-danger" onClick={handleEndClassCallback}>End Class</button>
-                          ) : (
+                            ) : (
                               <button className="btn btn-success" onClick={() => handleOpenScanner(subject)}>Open Scanner</button>
-                          )}
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -307,7 +307,7 @@ function FacultySchedule() {
                 <p className="text-lg font-bold">{scanResult}</p>
               </div>
             )}
-            
+
             {/* Buttons and messages */}
             <div className="mt-4">
               {isScannerOpen && (
