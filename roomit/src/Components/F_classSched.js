@@ -34,7 +34,7 @@ function FacultySchedule() {
     const fetchData = async (user) => {
       try {
         // Kunin ang user data mula sa database
-        const userRef = ref(database, `users/${user.email}`);
+        const userRef = ref(database, `users/${user.uid}`);
         const userSnapshot = await get(userRef);
 
         if (userSnapshot.exists()) {
@@ -70,10 +70,10 @@ function FacultySchedule() {
         }
 
         // Check kung may ini-occupy na room at kung naka-attend ng class
-        const occupiedRoomRef = ref(database, `users/${user.email}/occupiedRoom`);
+        const occupiedRoomRef = ref(database, `users/${user.uid}/occupiedRoom`);
         const occupiedRoomSnapshot = await get(occupiedRoomRef);
 
-        const attendingClassRef = ref(database, `users/${user.email}/attendingClass`);
+        const attendingClassRef = ref(database, `users/${user.uid}/attendingClass`);
         const attendingClassSnapshot = await get(attendingClassRef);
 
         const selectedScheduleRef = ref(database, `rooms`);
@@ -157,12 +157,12 @@ function FacultySchedule() {
   // Function para sa pag-attend ng class
   const handleAttendClass = async () => {
     if (auth.currentUser) {
-      const userEmail = auth.currentUser.emil;
+      const userUid = auth.currentUser.uid;
 
-      const occupiedRoomRef = ref(database, `users/${userEmail}/occupiedRoom`);
+      const occupiedRoomRef = ref(database, `users/${userUid}/occupiedRoom`);
       const occupiedRoomSnapshot = await get(occupiedRoomRef);
 
-      const attendingClassRef = ref(database, `users/${userEmail}/attendingClass`);
+      const attendingClassRef = ref(database, `users/${userUid}/attendingClass`);
       const attendingClassSnapshot = await get(attendingClassRef);
 
       if (occupiedRoomSnapshot.exists() && occupiedRoomSnapshot.val() !== selectedSchedule.room) {
@@ -193,7 +193,7 @@ function FacultySchedule() {
     }
 
       await set(ref(database, `rooms/${selectedSchedule.room}`), scheduleData, currentTime);
-      await set(ref(database, `users/${userEmail}/occupiedRoom`), selectedSchedule.room);
+      await set(ref(database, `users/${userUid}/occupiedRoom`), selectedSchedule.room);
 
       setRoomOccupied(true);
       setAttendingClass(true);
@@ -209,10 +209,10 @@ function FacultySchedule() {
     setShowScanner(false);
 
     if (auth.currentUser) {
-      const userEmail = auth.currentUser.email;
+      const userUid = auth.currentUser.uid;
 
-      set(ref(database, `users/${userEmail}/occupiedRoom`), null);
-      set(ref(database, `users/${userEmail}/attendingClass`), null);
+      set(ref(database, `users/${userUid}/occupiedRoom`), null);
+      set(ref(database, `users/${userUid}/attendingClass`), null);
 
       if (selectedSchedule) {
         const timeEnded = Date.now();
