@@ -184,7 +184,7 @@ function FacultySchedule() {
 
   const handleEndClass = async () => {
     console.log("Selected Schedule:", selectedSchedule.room);
-    setAttendingClass(false);
+    setAttendingClass(true);
     setShowScanner(false);
   
     if (auth.currentUser) {
