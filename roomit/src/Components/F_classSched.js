@@ -139,6 +139,7 @@ function FacultySchedule() {
         return;
       }
 
+      setAttendingClass(true);
       setErrorMessage('');
     } else {
       setErrorMessage('Error: Room not found or invalid QR code.');
