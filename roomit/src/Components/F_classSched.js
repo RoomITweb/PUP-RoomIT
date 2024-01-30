@@ -185,23 +185,21 @@ function FacultySchedule() {
   const handleEndClass = async () => {
     try {
       console.log('Start of handleEndClass');
+  
       if (!auth.currentUser) {
-        return; // Walang kasalukuyang user, wakasan ang function
+        console.log('No current user');
+        return;
       }
   
       const userUid = auth.currentUser.uid;
-  
-      // Siguruhing ang `selectedSchedule` ay hindi undefined
-      if (!selectedSchedule || !selectedSchedule.room) {
-        setErrorMessage('Error: No selected schedule or room found.');
-        return;
-      }
+      console.log('User UID:', userUid);
   
       // Check kung ang user ay umatend sa ibang room na
       const occupiedRoomRef = ref(database, `users/${userUid}/occupiedRoom`);
       const occupiedRoomSnapshot = await get(occupiedRoomRef);
   
       if (occupiedRoomSnapshot.exists() && occupiedRoomSnapshot.val() !== selectedSchedule.room) {
+        console.log('Already attending a class in another room');
         setErrorMessage('Error: You are already attending a class in another room.');
         return;
       }
@@ -210,9 +208,11 @@ function FacultySchedule() {
       const currentTime = new Date().toLocaleString();
   
       // I-update ang 'occupiedRoom' ng user
+      console.log('Updating occupiedRoom for user:', userUid);
       await set(ref(database, `users/${userUid}/occupiedRoom`), null);
   
       // I-update ang room sa Firebase
+      console.log('Updating room in Firebase:', selectedSchedule.room);
       await set(ref(database, `rooms/${selectedSchedule.room}`), null);
   
       // Kunin ang kasaysayan na ref
@@ -225,6 +225,7 @@ function FacultySchedule() {
         const historyData = historySnapshot.val();
   
         // I-update ang kasaysayan
+        console.log('Updating history with new entry');
         await set(historyRef, {
           ...historyData,
           [currentTime]: {
@@ -234,6 +235,7 @@ function FacultySchedule() {
         });
       } else {
         // Gumawa ng bagong entry sa kasaysayan
+        console.log('Creating new history entry');
         await set(historyRef, {
           [currentTime]: {
             ...selectedSchedule,
@@ -247,7 +249,6 @@ function FacultySchedule() {
       setSuccessMessage('You have successfully ended the class.');
       console.log('End of handleEndClass');
     } catch (error) {
-      console.error('Error ending the class:', error);
       console.error('Error in handleEndClass:', error);
       setErrorMessage('Error ending the class. Please try again.');
     }
