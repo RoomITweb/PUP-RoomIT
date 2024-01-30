@@ -190,23 +190,23 @@ function FacultySchedule() {
     console.log("Selected Schedule:", selectedSchedule);
     setAttendingClass(false);
     setShowScanner(false);
-
+  
     if (auth.currentUser) {
       const userUid = auth.currentUser.uid;
-
+  
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
-
+  
       if (selectedSchedule.room) {
         const timeEnded = Date.now(); // Unix timestamp in milliseconds
-
+  
         const historyRef = ref(database, `history`);
-
+  
         try {
           const historySnapshot = await get(historyRef);
-
+  
           if (historySnapshot.exists()) {
             const historyData = historySnapshot.val();
-
+  
             // Update the existing entry for the specific room
             await set(ref(database, `rooms/${selectedSchedule.room}`), null);
             await set(historyRef, {
@@ -225,7 +225,12 @@ function FacultySchedule() {
               },
             });
           }
-
+  
+          console.log("History Entry Added:", {
+            ...selectedSchedule,
+            timeEnded: timeEnded,
+          });
+  
           setRoomOccupied(false);
           setErrorMessage('');
           setSuccessMessage('You have successfully ended the class.');
