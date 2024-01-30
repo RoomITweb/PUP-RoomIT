@@ -204,7 +204,7 @@ function FacultySchedule() {
           if (historySnapshot.exists()) {
             const historyData = historySnapshot.val();
   
-            // Update the existing entry for the specific room
+            // Remove the entry for the specific room
             await set(ref(database, `rooms/${selectedSchedule.room}`), null);
             await set(historyRef, {
               ...historyData,
