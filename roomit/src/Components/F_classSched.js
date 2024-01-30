@@ -201,7 +201,6 @@ function FacultySchedule() {
       if (occupiedRoomSnapshot.exists() && occupiedRoomSnapshot.val() !== selectedSchedule.room) {
         console.log('Already attending a class in another room');
         setErrorMessage('Error: You are already attending a class in another room.');
-        return;
       }
   
       // Kunin ang kasalukuyang oras
