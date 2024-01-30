@@ -206,7 +206,7 @@ function FacultySchedule() {
                     >
                       <option value="" disabled hidden>Choose a Semester</option>
                       <option value="All">All</option>
-                      <option value="1st Semester">1st Semester</option>
+                      <option value="1st Semester">1stSemester</option>
                       <option value="2nd Semester">2nd Semester</option>
                       <option value="Summer">Summer</option>
                       {/* Add more options for other semesters */}
