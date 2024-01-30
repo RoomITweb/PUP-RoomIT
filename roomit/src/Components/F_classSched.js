@@ -31,14 +31,14 @@ function FacultySchedule() {
       try {
         const userRef = ref(database, `users/${user.uid}`);
         const userSnapshot = await get(userRef);
-    
+
         if (userSnapshot.exists()) {
           const userData = userSnapshot.val();
           if (userData.role === 'faculty') {
             setFacultyName(`${userData.firstName} ${userData.lastName}`);
           }
         }
-    
+
         if (selectedSchoolYear && selectedSemester) {
           const schedulesRef = ref(database, 'schedules');
           const facultyScheduleQuery = query(
@@ -47,7 +47,7 @@ function FacultySchedule() {
             equalTo(facultyName)
           );
           const scheduleSnapshot = await get(facultyScheduleQuery);
-    
+
           if (scheduleSnapshot.exists()) {
             const facultySchedules = [];
             scheduleSnapshot.forEach((schedule) => {
@@ -62,33 +62,38 @@ function FacultySchedule() {
             setFacultySchedules(facultySchedules);
           }
         }
-    
         const occupiedRoomRef = ref(database, `users/${user.uid}/occupiedRoom`);
         const occupiedRoomSnapshot = await get(occupiedRoomRef);
-    
+
         const attendingClassRef = ref(database, `users/${user.uid}/attendingClass`);
         const attendingClassSnapshot = await get(attendingClassRef);
-    
+
+
         if (occupiedRoomSnapshot.exists()) {
-          setRoomOccupied(true);
-        } else {
-          setRoomOccupied(false);
+          setRoomOccupied(selectedSchedule);
         }
-    
+
         if (attendingClassSnapshot.exists()) {
-          setAttendingClass(true);
-        } else {
-          setAttendingClass(false);
+          setAttendingClass(selectedSchedule);
         }
-    
-        // Retrieve the user's schedule data
+
         const selectedScheduleRef = ref(database, `rooms`);
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
-    
+  
+        console.log("roomOccupied:", roomOccupied);
+        console.log("attendingClass:", attendingClass);
+
         if (selectedScheduleSnapshot.exists()) {
-          const selectedScheduleData = selectedScheduleSnapshot.val();
-          setSelectedSchedule(selectedScheduleData);
+          setRoomOccupied(true);
+          setAttendingClass(true);
+        } else {
+          setRoomOccupied(false);
+          setAttendingClass(false);
         }
+
+        console.log("After setting roomOccupied:", roomOccupied);
+        console.log("After setting attendingClass:", attendingClass);
+
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -385,8 +390,6 @@ function FacultySchedule() {
                           <td>
                           {roomOccupied ? (
                               <button className="btn btn-danger" onClick={handleEndClass}>End Class</button>
-                          ) : attendingClass ? (
-                              <button className="btn btn-primary" onClick={handleAttendClass}>Attend Class</button>
                           ) : (
                               <button className="btn btn-success" onClick={() => handleOpenScanner(subject)}>Open Scanner</button>
                           )}
