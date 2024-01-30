@@ -6,6 +6,7 @@ import ReactModal from 'react-modal';
 import BarcodeScanner from './BarcodeScanner';
 
 function FacultySchedule() {
+  const [isEndClassButtonClicked, setIsEndClassButtonClicked] = useState(false);
   const [facultyName, setFacultyName] = useState('');
   const [facultySchedules, setFacultySchedules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +26,66 @@ function FacultySchedule() {
   const auth = getAuth(app);
   const database = getDatabase(app);
   ReactModal.setAppElement('#root');
+
+  const handleEndClass = async () => {
+    console.log("Selected Schedule:", selectedSchedule);
+    setAttendingClass(false);
+    setShowScanner(false);
+
+    if (auth.currentUser) {
+      const userUid = auth.currentUser.uid;
+
+      set(ref(database, `users/${userUid}/occupiedRoom`), null);
+
+      if (selectedSchedule.room) {
+        const timeEnded = Date.now(); // Unix timestamp in milliseconds
+
+        const historyRef = ref(database, `history`);
+
+        try {
+          const historySnapshot = await get(historyRef);
+
+          if (historySnapshot.exists()) {
+            const historyData = historySnapshot.val();
+
+            // Update the existing entry for the specific room
+            await set(ref(database, `rooms/${selectedSchedule.room}`), null);
+            await set(historyRef, {
+              ...historyData,
+              [timeEnded.toString()]: {
+                ...selectedSchedule,
+                timeEnded: timeEnded,
+              },
+            });
+          } else {
+            // Create a new entry for the specific room
+            await set(historyRef, {
+              [timeEnded.toString()]: {
+                ...selectedSchedule,
+                timeEnded: timeEnded,
+              },
+            });
+          }
+
+          console.log("History Entry Added:", {
+            ...selectedSchedule,
+            timeEnded: timeEnded,
+          });
+
+          setRoomOccupied(false);
+          setErrorMessage('');
+          setSuccessMessage('You have successfully ended the class.');
+        } catch (error) {
+          console.error('Error updating history:', error);
+          setErrorMessage('Error ending the class. Please try again.');
+        }
+      }
+    }
+  };
+
+  const handleEndClassCallback = () => {
+    setIsEndClassButtonClicked(true);
+  };
 
   useEffect(() => {
     const fetchData = async (user) => {
@@ -80,9 +141,9 @@ function FacultySchedule() {
 
         const selectedScheduleRef = ref(database, `rooms`);
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
-  
-        if (selectedScheduleSnapshot.exists()) {
-          handleEndClass(); // Tawagin ang handleEndClass bilang isang function
+
+        if (selectedScheduleSnapshot.exists() && isEndClassButtonClicked) {
+          handleEndClass(); // Tawagin ang handleEndClass kapag nai-click ang "End Class" button
         }
 
       } catch (error) {
@@ -103,173 +164,7 @@ function FacultySchedule() {
     return () => {
       unsubscribe();
     };
-  }, [auth, database, facultyName, selectedSchoolYear, selectedSemester, roomOccupied, attendingClass, selectedSchedule]);
-
-  const handleOpenScanner = (subject) => {
-    setSelectedSchedule(subject);
-    setShowScanner(true);
-    setIsScannerOpen(true);
-
-    if (subject.room) {
-      setIsScannerOpen(true);
-      setScanMessage(`Room: ${subject.room}`);
-    }
-  };
-
-  const handleQrCodeScan = (result) => {
-    // Handle the QR code scan result here
-    console.log('QR Code Scan Result:', result);
-    setScanResult(result);
-
-    if (scanMessage && result.includes(scanMessage)) {
-      // Check if the room is already occupied
-      if (roomOccupied && selectedSchedule.room !== scanMessage) {
-        setErrorMessage('Error: Room is already occupied by another user.');
-        return;
-      }
-
-      setAttendingClass(true);
-      setErrorMessage('');
-    } else {
-      setErrorMessage('Error: Room not found or invalid QR code.');
-    }
-  };
-
-  const handleCloseScanner = () => {
-    setShowScanner(false);
-    setScanResult(null);
-    setAttendingClass(false);
-    setScanMessage('');
-    setErrorMessage('');
-  };
-
-  const handleAttendClass = async () => {
-    if (auth.currentUser) {
-      const userUid = auth.currentUser.uid;
-
-      // Check if the room is already occupied
-      const occupiedRoomRef = ref(database, `users/${userUid}/occupiedRoom`);
-      const occupiedRoomSnapshot = await get(occupiedRoomRef);
-
-      if (occupiedRoomSnapshot.exists() && occupiedRoomSnapshot.val() !== selectedSchedule.room) {
-        setErrorMessage('Error: You are already attending a class in another room.');
-        return;
-      }
-
-      // Get the current date and time
-      const currentTime = new Date().toLocaleString();
-
-      const scheduleData = {
-        schoolYear: selectedSchedule.schoolYear,
-        semester: selectedSchedule.semester,
-        facultyName: facultyName,
-        subjectCode: selectedSchedule.subjectCode,
-        subjectDescription: selectedSchedule.subjectDescription,
-        course: selectedSchedule.course,
-        day: selectedSchedule.day,
-        time: selectedSchedule.time,
-        building: selectedSchedule.building,
-        room: selectedSchedule.room,
-        attendedTime: currentTime,
-      };
-
-      // Include the 'attendendTime' field in selectedSchedule
-      selectedSchedule.attendTime = currentTime;
-
-      await set(ref(database, `rooms/${selectedSchedule.room}`), scheduleData, currentTime);
-      await set(ref(database, `users/${userUid}/occupiedRoom`), selectedSchedule.room);
-
-      setRoomOccupied(true);
-      setSuccessMessage('You have successfully attended the class.');
-      setErrorMessage('');
-    }
-  };
-
-  const handleEndClass = async () => {
-    console.log("Selected Schedule:", selectedSchedule);
-    setAttendingClass(false);
-    setShowScanner(false);
-  
-    if (auth.currentUser) {
-      const userUid = auth.currentUser.uid;
-  
-      set(ref(database, `users/${userUid}/occupiedRoom`), null);
-  
-      if (selectedSchedule.room) {
-        const timeEnded = Date.now(); // Unix timestamp in milliseconds
-  
-        const historyRef = ref(database, `history`);
-  
-        try {
-          const historySnapshot = await get(historyRef);
-  
-          if (historySnapshot.exists()) {
-            const historyData = historySnapshot.val();
-  
-            // Update the existing entry for the specific room
-            await set(ref(database, `rooms/${selectedSchedule.room}`), null);
-            await set(historyRef, {
-              ...historyData,
-              [timeEnded.toString()]: {
-                ...selectedSchedule,
-                timeEnded: timeEnded,
-              },
-            });
-          } else {
-            // Create a new entry for the specific room
-            await set(historyRef, {
-              [timeEnded.toString()]: {
-                ...selectedSchedule,
-                timeEnded: timeEnded,
-              },
-            });
-          }
-  
-          console.log("History Entry Added:", {
-            ...selectedSchedule,
-            timeEnded: timeEnded,
-          });
-  
-          setRoomOccupied(false);
-          setErrorMessage('');
-          setSuccessMessage('You have successfully ended the class.');
-        } catch (error) {
-          console.error('Error updating history:', error);
-          setErrorMessage('Error ending the class. Please try again.');
-        }
-      }
-    }
-  };
-
-
-  const filterSchedulesByDay = (day) => {
-    if (day === 'All') {
-      setFacultySchedules([]);
-      return;
-    }
-
-    const filteredSchedules = facultySchedules.filter((schedule) => schedule.day === day);
-    setFacultySchedules(filteredSchedules);
-  };
-
-  const filterSchedulesBySchoolYearAndSemester = (schoolYear, semester) => {
-    if (schoolYear === 'All' && semester === 'All') {
-      setFacultySchedules([]);
-      return;
-    }
-
-    const filteredSchedules = facultySchedules.filter((schedule) => {
-      if (schoolYear === 'All') {
-        return schedule.semester === semester;
-      }
-      if (semester === 'All') {
-        return schedule.schoolYear === schoolYear;
-      }
-      return schedule.schoolYear === schoolYear && schedule.semester === semester;
-    });
-
-    setFacultySchedules(filteredSchedules);
-  };
+  }, [auth, database, facultyName, selectedSchoolYear, selectedSemester, roomOccupied, attendingClass, selectedSchedule, isEndClassButtonClicked]);
 
   return (
     <div className='h-screen justify-center flex items-center'>
@@ -380,10 +275,10 @@ function FacultySchedule() {
                           <td>{subject.room}</td>
                           <td>
                             {roomOccupied ? (
-                              <button className="btn btn-danger" onClick={() => handleEndClass()}>End Class</button>
-                            ) : (
+                              <button className="btn btn-danger" onClick={handleEndClassCallback}>End Class</button>
+                          ) : (
                               <button className="btn btn-success" onClick={() => handleOpenScanner(subject)}>Open Scanner</button>
-                            )}
+                          )}
                           </td>
                         </tr>
                       ))}
