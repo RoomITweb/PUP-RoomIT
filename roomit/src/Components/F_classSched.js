@@ -191,6 +191,7 @@ function FacultySchedule() {
       const userUid = auth.currentUser.uid;
   
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
+      set(ref(database, `rooms/${roomUid}/room`), null);
   
       if (selectedSchedule.room) {
         const timeEnded = Date.now(); // Unix timestamp in milliseconds
