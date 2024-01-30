@@ -68,31 +68,22 @@ function FacultySchedule() {
         const attendingClassRef = ref(database, `users/${user.uid}/attendingClass`);
         const attendingClassSnapshot = await get(attendingClassRef);
 
-
         if (occupiedRoomSnapshot.exists()) {
-          setRoomOccupied(selectedSchedule);
+          setRoomOccupied(true);
+        } else {
+          setRoomOccupied(false);
         }
 
         if (attendingClassSnapshot.exists()) {
-          setAttendingClass(selectedSchedule);
+          setAttendingClass(true);
         }
 
         const selectedScheduleRef = ref(database, `rooms`);
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
   
-        console.log("roomOccupied:", roomOccupied);
-        console.log("attendingClass:", attendingClass);
-
         if (selectedScheduleSnapshot.exists()) {
           setRoomOccupied(true);
-          setAttendingClass(true);
-        } else {
-          setRoomOccupied(false);
-          setAttendingClass(false);
         }
-
-        console.log("After setting roomOccupied:", roomOccupied);
-        console.log("After setting attendingClass:", attendingClass);
 
       } catch (error) {
         console.error('Error fetching data:', error);
