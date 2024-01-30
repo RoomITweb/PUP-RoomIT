@@ -86,8 +86,8 @@ function FacultySchedule() {
           setAttendingClass(false);
         }
 
-console.log("After setting roomOccupied:", roomOccupied);
-console.log("After setting attendingClass:", attendingClass);
+        console.log("After setting roomOccupied:", roomOccupied);
+        console.log("After setting attendingClass:", attendingClass);
 
       } catch (error) {
         console.error('Error fetching data:', error);
