@@ -76,8 +76,8 @@ function FacultySchedule() {
         const attendingClassRef = ref(database, `users/${user.uid}/attendingClass`);
         const attendingClassSnapshot = await get(attendingClassRef);
 
-        const selectedScheduleRef = ref(database, `rooms`);
-        const selectedScheduleSnapshot = await get(selectedScheduleRef);
+        const selectedSchedule = ref(database, `rooms`);
+        const selectedScheduleSnapshot = await get(selectedSchedule);
 
         console.log('occupiedRoomSnapshot', occupiedRoomSnapshot.val());
         console.log('attendingClassSnapshot', attendingClassSnapshot.val());
@@ -90,7 +90,6 @@ function FacultySchedule() {
         }
 
         if (selectedScheduleSnapshot.exists() && occupiedRoomSnapshot.exists()) {
-          setSelectedSchedule(selectedSchedule);
           setRoomOccupied(true);
         } else {
           setRoomOccupied(false);
@@ -251,6 +250,7 @@ function FacultySchedule() {
           setRoomOccupied(false);
           setErrorMessage('');
           setSuccessMessage('You have successfully ended the class.');
+
         } catch (error) {
           console.error('Error updating history:', error);
           setErrorMessage('Error ending the class. Please try again.');
