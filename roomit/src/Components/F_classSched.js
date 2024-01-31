@@ -221,7 +221,7 @@ function FacultySchedule() {
     setAttendingClass(false);
     setShowScanner(false);
 
-      if (selectedScheduleSnapshot.exists()) {
+      if (selectedSchedule && selectedScheduleSnapshot.exists()) {
         const selectedSchedule = selectedScheduleSnapshot.val();
         setSelectedSchedule(selectedSchedule);
 
