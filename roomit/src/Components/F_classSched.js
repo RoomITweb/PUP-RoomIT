@@ -85,6 +85,15 @@ function FacultySchedule() {
         console.log('roomOccupied', roomOccupied);
         console.log('attendingClass', attendingClass);
 
+        // Check kung ang selectedScheduleSnapshot ay may laman
+        if (selectedScheduleSnapshot.exists()) {
+        // Kunin ang data ng schedule mula sa snapshot
+        const selectedScheduleData = selectedScheduleSnapshot.val();
+
+        // I-set ang selectedSchedule na may laman ng data ng schedule
+        setSelectedSchedule(selectedScheduleData);
+        }
+
         if (attendingClassSnapshot.exists()) {
           setAttendingClass(true);
         }
