@@ -148,6 +148,7 @@ function AddSchedule() {
 
     const existingSchedule = existingSchedules.find(
       (schedule) =>
+        schedule.semester === semester &&
         schedule.day === day &&
         schedule.time === `${startTime} - ${endTime}` &&
         schedule.room === room
@@ -155,7 +156,7 @@ function AddSchedule() {
 
     if (existingSchedule) {
       alert(
-        'A schedule with the same day, time, and room already exists. Please choose a different combination.'
+        'A schedule with the same day, time, and room already exists. Please select another schedule.'
       );
       return;
     }
