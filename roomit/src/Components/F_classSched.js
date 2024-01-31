@@ -224,7 +224,7 @@ function FacultySchedule() {
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
       set(ref(database, `users/${userUid}/attendingClass`), null);
 
-      if (selectedSchedule) {
+      if (selectedSchedule !== null && selectedSchedule !== undefined) {
         const timeEnded = Date.now();
         const historyRef = ref(database, `history`);
 
