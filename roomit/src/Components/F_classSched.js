@@ -4,6 +4,8 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { app } from './firebase';
 import ReactModal from 'react-modal';
 import BarcodeScanner from './BarcodeScanner';
+// Import ng localStorage
+import { localStorage } from 'localStorage';
 
 // React component para sa schedule ng faculty
 function FacultySchedule() {
@@ -78,6 +80,14 @@ function FacultySchedule() {
 
         const selectedScheduleRef = ref(database, `rooms`);
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
+
+        // I-retrieve ang selectedSchedule mula sa local storage
+        const storedSelectedSchedule = localStorage.getItem('selectedSchedule');
+
+        if (storedSelectedSchedule) {
+        const parsedSelectedSchedule = JSON.parse(storedSelectedSchedule);
+        setSelectedSchedule(parsedSelectedSchedule);
+        }
 
         console.log('occupiedRoomSnapshot', occupiedRoomSnapshot.val());
         console.log('attendingClassSnapshot', attendingClassSnapshot.val());
@@ -199,6 +209,8 @@ function FacultySchedule() {
       setAttendingClass(true);
       setSuccessMessage('You have successfully attended the class.');
       setErrorMessage('');
+      // I-save ang selectedSchedule sa local storage
+      localStorage.setItem('selectedSchedule', JSON.stringify(selectedSchedule));
     }
   };
 
@@ -260,6 +272,8 @@ function FacultySchedule() {
           setRoomOccupied(false);
           setErrorMessage('');
           setSuccessMessage('You have successfully ended the class.');
+          // Clear local storage pagkatapos ng lahat ng operasyon
+          localStorage.clear();
 
         } catch (error) {
           console.error('Error updating history:', error);
