@@ -204,8 +204,11 @@ function FacultySchedule() {
 
   // Function para sa pag-end ng class
   const handleEndClass = async () => {
-    const selectedScheduleRef = ref(database, `rooms`);
-    const selectedScheduleSnapshot = await get(selectedScheduleRef);
+    if (auth.currentUser) {
+      const userUid = auth.currentUser.uid;
+
+      const selectedScheduleRef = ref(database, `rooms`);
+      const selectedScheduleSnapshot = await get(selectedScheduleRef);
 
     if (selectedScheduleSnapshot.exists()) {
       const selectedSchedule = selectedScheduleSnapshot.val();
@@ -218,13 +221,10 @@ function FacultySchedule() {
     setAttendingClass(false);
     setShowScanner(false);
 
-    if (auth.currentUser) {
-      const userUid = auth.currentUser.uid;
-
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
       set(ref(database, `users/${userUid}/attendingClass`), null);
 
-      if (selectedSchedule !== null && selectedSchedule !== undefined) {
+      if (selectedScheduleSnapshot.exists()) {
         const timeEnded = Date.now();
         const historyRef = ref(database, `history`);
 
