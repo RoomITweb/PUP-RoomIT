@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { getDatabase, ref, get, remove } from 'firebase/database';
 import { app } from './firebase';
 import 'bootstrap/dist/css/bootstrap.css';
+import './FacultyScanHistory.css'; 
+import html2canvas from 'html2canvas';
+import ExcelJS from 'exceljs';  // Import xlsx library
 
 function RCFacultyScanHistory() {
   const [historyData, setHistoryData] = useState([]);
@@ -10,8 +13,7 @@ function RCFacultyScanHistory() {
   const [buildingFilter, setBuildingFilter] = useState('All');
   const [roomFilter, setRoomFilter] = useState('All');
   const [timeFilter, setTimeFilter] = useState('All');
-  const [showRoomStatistics, setShowRoomStatistics] = useState(false);
-  const [roomStatisticsData, setRoomStatisticsData] = useState({});
+  const schoolYear = '2023-2024';
   const database = getDatabase(app);
 
   useEffect(() => {
@@ -41,62 +43,27 @@ function RCFacultyScanHistory() {
 
   const handleDeleteHistory = async () => {
     const confirmDelete = window.confirm('Are you sure you want to delete the entire scan history? This action cannot be undone.');
-
+  
     if (confirmDelete) {
       try {
         const historyRef = ref(database, 'history');
-        await remove(historyRef);
-        setHistoryData([]); // Clear historyData state after deletion
-        setFilteredData([]); // Clear filteredData state after deletion
-        alert('Scan history deleted successfully.');
+        // Kunin ang kasalukuyang history data mula sa database
+        const historySnapshot = await get(historyRef);
+  
+        if (historySnapshot.exists()) {
+          // Tanggalin ang history sa database
+          await remove(historyRef);
+          setHistoryData([]); // Clear historyData state after deletion
+          setFilteredData([]); // Clear filteredData state after deletion
+          alert('Scan history deleted successfully.');
+        } else {
+          alert('No scan history found.');
+        }
       } catch (error) {
         console.error('Error deleting history:', error);
         alert('Failed to delete scan history.');
       }
     }
-  };
-
-  const handleViewRoomStatistics = () => {
-    // Filtered data based on building filter
-    let filteredResults = [...historyData];
-  
-    if (buildingFilter !== 'All') {
-      filteredResults = filteredResults.filter(entry => entry.building === buildingFilter);
-    }
-  
-    // Create an object to store room frequency per month
-    const roomStatistics = {};
-  
-    filteredResults.forEach(entry => {
-      const entryDate = new Date(entry.attendTime); // Assuming `entry.time` is the date field
-      const monthYearKey = `${entryDate.getFullYear()}-${entryDate.getMonth() + 1}`;
-  
-      if (!roomStatistics[monthYearKey]) {
-        roomStatistics[monthYearKey] = {};
-      }
-  
-      const roomKey = entry.room;
-      roomStatistics[monthYearKey][roomKey] = (roomStatistics[monthYearKey][roomKey] || 0) + 1;
-    });
-  
-    // Calculate room usage percentage per month
-    const roomStatisticsPercentage = {};
-  
-    Object.keys(roomStatistics).forEach(monthYearKey => {
-      const totalEntries = Object.values(roomStatistics[monthYearKey]).reduce((total, count) => total + count, 0);
-      roomStatisticsPercentage[monthYearKey] = {};
-  
-      Object.keys(roomStatistics[monthYearKey]).forEach(roomKey => {
-        const roomCount = roomStatistics[monthYearKey][roomKey];
-        const percentage = (roomCount / totalEntries) * 100;
-        roomStatisticsPercentage[monthYearKey][roomKey] = percentage.toFixed(2);
-      });
-    });
-  
-    console.log(roomStatisticsPercentage);
-
-    setRoomStatisticsData(roomStatisticsPercentage);
-    setShowRoomStatistics(prevState => !prevState);
   };
 
   useEffect(() => {
@@ -159,73 +126,133 @@ function RCFacultyScanHistory() {
     setTimeFilter(event.target.value);
   };
 
-  const handleGenerateReport = () => {
+  const handleGenerateReport = async () => {
     if (filteredData.length === 0) {
       alert('No data to generate a report.');
       return;
     }
   
-    let csvContent = 'data:text/csv;charset=utf-8,';
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Scan Report');
   
-    csvContent += 'Semester,Faculty Name,Building,Room,Subject Code,Subject Description,Course,Day,Lecture Hours,Time-in,Time-out\n';
+      // Headers
+      worksheet.addRow(['Semester', 'Faculty Name', 'Building', 'Room', 'Subject Code', 'Subject Description', 'Course', 'Day', 'Lecture Hours', 'Time-in', 'Time-out']);
   
-    filteredData.forEach(entry => {
-      csvContent += `${entry.semester},${entry.facultyName},${entry.building},${entry.room},${entry.subjectCode},${entry.subjectDescription},${entry.course},${entry.day},${entry.time},${entry.attendTime},${formatTime(entry.timeEnded)}\n`;
-    });
+      // Data
+      filteredData.forEach(entry => {
+        worksheet.addRow([
+          entry.semester,
+          entry.facultyName,
+          entry.building,
+          entry.room,
+          entry.subjectCode,
+          entry.subjectDescription,
+          entry.course,
+          entry.day,
+          entry.time,
+          formatTime(entry.attendTime),
+          formatTime(entry.timeEnded),
+        ]);
+      });
   
-    const encodedUri = encodeURI(csvContent);
+      // Set row and column properties
+      worksheet.getRow(1).font = { bold: true }; // Make header row bold
   
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'scan_report.csv');
-    document.body.appendChild(link);
+      // Set column widths
+      worksheet.columns = [
+        { width: 15 },
+        { width: 20 },
+        { width: 15 },
+        { width: 10 },
+        { width: 15 },
+        { width: 30 },
+        { width: 15 },
+        { width: 10 },
+        { width: 15 },
+        { width: 20 },
+        { width: 20 }
+      ];
   
-    link.click();
+      const blob = await workbook.xlsx.writeBuffer();
+      const data = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(data);
   
-    document.body.removeChild(link);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'scan_report.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('Failed to generate report.');
+    }
   };
+  
+  
+const handleSaveImage = () => {
+  const table = document.querySelector('.table-container table');
+  if (!table) {
+    alert('No table data to save as image.');
+    return;
+  }
+
+  html2canvas(table).then((canvas) => {
+    const imageUri = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = imageUri;
+    link.download = 'scan_report.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+};
+  
+const handlePrint = () => {
+  window.print();
+};
+  
 
   return (
     <div>
       <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>Scan History</h2>
+      <h3>School Year {schoolYear}</h3>
 
-      <div className= "button"><button onClick={handleDeleteHistory}>Delete History</button> </div>
+      <button onClick={handleDeleteHistory}>Delete History</button>
 
       <div>
         <label>Select Semester:</label>
-        <div className="form-group">
         <select value={semesterFilter} onChange={handleSemesterFilterChange}>
           <option value="All">All</option>
           <option value="1st Semester">1st Semester</option>
           <option value="2nd Semester">2nd Semester</option>
           <option value="Summer">Summer</option>
         </select>
-        </div>
       </div>
 
       <div>
         <label>Select Building:</label>
-        <div className="form-group">
         <select value={buildingFilter} onChange={handleBuildingFilterChange}>
           <option value="All">All</option>
           <option value="Nantes Building">Nantes Building</option>
           <option value="Science Building">Science Building</option>
+          <option value="Suarez Building">Suarez Building</option>
         </select>
-        </div>
       </div>
 
       {buildingFilter === 'Nantes Building' && (
         <div>
           <label>Select Room:</label>
-          <div className="form-group">
           <select value={roomFilter} onChange={handleRoomFilterChange}>
             <option value="All">All</option>
-            <option value="205">205</option>
-            <option value="206">206</option>
+            <option value="120">120</option>
+            <option value="121">121</option>
+            <option value="122">122</option>
             <option value="AVR">AVR</option>
-            <option value="Multimedia">Multimedia</option>
+            <option value="Keyboaring Lab">Keyboaring Lab</option>
+            <option value="Speech Lab">Speech Lab</option>
           </select>
-          </div>
         </div>
       )}
 
@@ -238,20 +265,33 @@ function RCFacultyScanHistory() {
             <option value="106">106</option>
             <option value="107">107</option>
             <option value="108">108</option>
+            <option value="203">203</option>
+            <option value="204">204</option>
+            <option value="205">205</option>
+            <option value="206">206</option>
+          </select>
+        </div>
+      )}
+
+    {buildingFilter === 'Suarez Building' && (
+        <div>
+          <label>Select Room:</label>
+          <select value={roomFilter} onChange={handleRoomFilterChange}>
+            <option value="All">All</option>
+            <option value="Com Lab 1">Com Lab 1</option>
+            <option value="Com Lab 2">Com Lab 2</option>
           </select>
         </div>
       )}
 
       <div>
         <label>Select Time:</label>
-        <div className="form-group">
         <select value={timeFilter} onChange={handleTimeFilterChange}>
           <option value="All">All</option>
           <option value="This day">This day</option>
           <option value="This week">This week</option>
           <option value="This month">This month</option>
         </select>
-        </div>
       </div>
 
       {filteredData.length === 0 ? (
@@ -261,7 +301,6 @@ function RCFacultyScanHistory() {
           <table>
             <thead>
               <tr>
-                <th>Semester</th>
                 <th>Faculty Name</th>
                 <th>Building</th>
                 <th>Room</th>
@@ -277,7 +316,6 @@ function RCFacultyScanHistory() {
             <tbody>
               {filteredData.map((entry, index) => (
                 <tr key={index}>
-                  <td>{entry.semester}</td>
                   <td>{entry.facultyName}</td>
                   <td>{entry.building}</td>
                   <td>{entry.room}</td>
@@ -296,34 +334,8 @@ function RCFacultyScanHistory() {
       )}
 
       <button onClick={handleGenerateReport}>Generate Report</button>
-      <button onClick={handleViewRoomStatistics}>
-        {showRoomStatistics ? 'Close Room Statistics' : 'View Room Statistics'}
-      </button>
-
-      {showRoomStatistics && (
-  <div className="modal" style={{ display: showRoomStatistics ? 'block' : 'none' }}>
-    <div className="modal-content">
-      <span className="close" onClick={() => setShowRoomStatistics(false)}>
-        &times;
-      </span>
-      <h2>Room Usage Statistics</h2>
-      <div className="room-statistics">
-        {Object.keys(roomStatisticsData).map(monthYearKey => (
-          <div key={monthYearKey} className="month-statistics">
-            <h3>{monthYearKey}</h3>
-            <ul>
-              {Object.entries(roomStatisticsData[monthYearKey]).map(([roomKey, percentage]) => (
-                <li key={roomKey}>
-                  Room {roomKey}: {percentage}% usage
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-)}
+      <button onClick={handleSaveImage}>Save as Image</button>
+      <button onClick={handlePrint}>Print</button>
 </div>
 );
 }
