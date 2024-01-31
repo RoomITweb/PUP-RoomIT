@@ -76,7 +76,7 @@ function FacultySchedule() {
         const attendingClassRef = ref(database, `users/${user.uid}/attendingClass`);
         const attendingClassSnapshot = await get(attendingClassRef);
 
-        const selectedScheduleRef = ref(database, `rooms`);
+        const selectedScheduleRef = ref(database, `rooms/${selectedSchedule.room}`);
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
 
         console.log('occupiedRoomSnapshot', occupiedRoomSnapshot.val());
@@ -204,11 +204,8 @@ function FacultySchedule() {
 
   // Function para sa pag-end ng class
   const handleEndClass = async () => {
-    if (auth.currentUser) {
-      const userUid = auth.currentUser.uid;
-
-      const selectedScheduleRef = ref(database, `rooms`);
-      const selectedScheduleSnapshot = await get(selectedScheduleRef);
+    const selectedScheduleRef = ref(database, `rooms/${selectedSchedule.room}`);
+    const selectedScheduleSnapshot = await get(selectedScheduleRef);
 
     if (selectedScheduleSnapshot.exists()) {
       const selectedSchedule = selectedScheduleSnapshot.val();
@@ -221,13 +218,13 @@ function FacultySchedule() {
     setAttendingClass(false);
     setShowScanner(false);
 
-      if (selectedSchedule && selectedScheduleSnapshot.exists()) {
-        const selectedSchedule = selectedScheduleSnapshot.val();
-        setSelectedSchedule(selectedSchedule);
+    if (auth.currentUser) {
+      const userUid = auth.currentUser.uid;
 
-        set(ref(database, `users/${userUid}/occupiedRoom`), null);
-        set(ref(database, `users/${userUid}/attendingClass`), null);
+      set(ref(database, `users/${userUid}/occupiedRoom`), null);
+      set(ref(database, `users/${userUid}/attendingClass`), null);
 
+      if (selectedSchedule !== null && selectedSchedule !== undefined) {
         const timeEnded = Date.now();
         const historyRef = ref(database, `history`);
 
