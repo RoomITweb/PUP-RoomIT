@@ -207,11 +207,19 @@ function FacultySchedule() {
     if (auth.currentUser) {
       const userUid = auth.currentUser.uid;
 
-      setAttendingClass(false);
-      setShowScanner(false);
-
       const selectedScheduleRef = ref(database, `rooms`);
       const selectedScheduleSnapshot = await get(selectedScheduleRef);
+
+    if (selectedScheduleSnapshot.exists()) {
+      const selectedSchedule = selectedScheduleSnapshot.val();
+      setSelectedSchedule(selectedSchedule);
+      console.log("Selected Schedule:", selectedSchedule);
+    } else {
+      console.log("Selected Schedule not found.");
+    }
+
+    setAttendingClass(false);
+    setShowScanner(false);
 
       if (selectedScheduleSnapshot.exists()) {
         const selectedSchedule = selectedScheduleSnapshot.val();
