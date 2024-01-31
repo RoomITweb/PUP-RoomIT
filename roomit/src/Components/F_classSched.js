@@ -208,11 +208,13 @@ function FacultySchedule() {
     const selectedScheduleSnapshot = await get(selectedScheduleRef);
 
     if (selectedScheduleSnapshot.exists()) {
-    const selectedScheduleData = selectedScheduleSnapshot.val();
-      setSelectedSchedule(selectedScheduleData);
-    } 
-    console.log("Selected Schedule:", selectedSchedule);
-    
+      const selectedSchedule = selectedScheduleSnapshot.val();
+      setSelectedSchedule(selectedSchedule);
+      console.log("Selected Schedule:", selectedSchedule);
+    } else {
+      console.log("Selected Schedule not found.");
+    }
+
     setAttendingClass(false);
     setShowScanner(false);
 
