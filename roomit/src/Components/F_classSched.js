@@ -91,9 +91,9 @@ function FacultySchedule() {
 
         if (selectedScheduleSnapshot.exists() && occupiedRoomSnapshot.exists()) {
            // Kunin ang data ng schedule mula sa snapshot
-        const selectedScheduleData = selectedScheduleSnapshot.val();
+        const selectedSchedule = selectedScheduleSnapshot.val();
         // I-set ang selectedSchedule na may laman ng data ng schedule
-          setSelectedSchedule(selectedScheduleData);
+          setSelectedSchedule(selectedSchedule);
           setRoomOccupied(true);
         } else {
           setRoomOccupied(false);
