@@ -76,7 +76,7 @@ function FacultySchedule() {
         const attendingClassRef = ref(database, `users/${user.uid}/attendingClass`);
         const attendingClassSnapshot = await get(attendingClassRef);
 
-        const selectedScheduleRef = ref(database, `rooms/${selectedSchedule.room}`);
+        const selectedScheduleRef = ref(database, `rooms`);
         const selectedScheduleSnapshot = await get(selectedScheduleRef);
 
         console.log('occupiedRoomSnapshot', occupiedRoomSnapshot.val());
@@ -204,7 +204,7 @@ function FacultySchedule() {
 
   // Function para sa pag-end ng class
   const handleEndClass = async () => {
-    const selectedScheduleRef = ref(database, `rooms/${selectedSchedule.room}`);
+    const selectedScheduleRef = ref(database, `rooms`);
     const selectedScheduleSnapshot = await get(selectedScheduleRef);
 
     if (selectedScheduleSnapshot.exists()) {
