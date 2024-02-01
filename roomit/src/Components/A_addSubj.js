@@ -11,6 +11,31 @@ function AddSubject() {
   const [creditUnit, setCreditUnit] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [subjects, setSubjects] = useState([]);
+
+  useEffect(() => {
+    // Fetch subjects from Firebase Realtime Database
+    const fetchSubjects = async () => {
+      try {
+        const database = getDatabase(app);
+        const subjectsRef = ref(database, 'subjects');
+
+        const snapshot = await get(child(subjectsRef, '/'));
+        if (snapshot.exists()) {
+          const subjectsData = snapshot.val();
+          const subjectsArray = Object.keys(subjectsData).map((key) => ({
+            id: key,
+            ...subjectsData[key],
+          }));
+          setSubjects(subjectsArray);
+        }
+      } catch (error) {
+        console.error('Error fetching subjects:', error);
+      }
+    };
+
+    fetchSubjects();
+  }, []); // Empty dependency array to fetch subjects only once on component mount
 
   const isDuplicateSubject = async (code, description) => {
     try {
@@ -79,6 +104,25 @@ function AddSubject() {
         setSuccessMessage('');
       });
   };  
+
+  const handleDeleteSubject = async (id) => {
+    try {
+      const database = getDatabase(app);
+      const subjectsRef = ref(database, 'subjects');
+
+      // Remove subject from Firebase Realtime Database
+      await remove(child(subjectsRef, id));
+
+      // Update local state after deletion
+      setSubjects((prevSubjects) => prevSubjects.filter((subject) => subject.id !== id));
+      setSuccessMessage('');
+      setErrorMessage('');
+    } catch (error) {
+      console.error('Error deleting subject:', error);
+      setErrorMessage('An error occurred while deleting the subject. Please try again.');
+      setSuccessMessage('');
+    }
+  };
 
   return (
     <div className="add-subject-container">
@@ -153,7 +197,24 @@ function AddSubject() {
 
       {errorMessage && <p className="text-danger mt-3">{errorMessage}</p>}
       {successMessage && <p className="text-success mt-3">{successMessage}</p>}
-      
+
+      {/* Display subjects */}
+      <div className="mt-4">
+        <h3>Subjects List</h3>
+        <ul>
+          {subjects.map((subject) => (
+            <li key={subject.id}>
+              {subject.course} - {subject.subjectCode} - {subject.subjectDescription} - {subject.creditUnit}
+              <button
+                className="btn btn-danger btn-sm ml-2"
+                onClick={() => handleDeleteSubject(subject.id)}
+              >
+                Delete
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
