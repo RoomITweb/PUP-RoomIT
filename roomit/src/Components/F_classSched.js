@@ -222,49 +222,52 @@ function FacultySchedule() {
       const userUid = auth.currentUser.uid;
 
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
-    set(ref(database, `users/${userUid}/attendingClass`), null);
+      set(ref(database, `users/${userUid}/attendingClass`), null);
 
-    const timeEnded = Date.now();
-    const historyRef = ref(database, `history`);
+      if (selectedSchedule !== null && selectedSchedule !== undefined) {
+        const timeEnded = Date.now();
+        const historyRef = ref(database, `history`);
 
-    try {
-      const historySnapshot = await get(historyRef);
+        try {
+          const historySnapshot = await get(historyRef);
 
-      if (historySnapshot.exists()) {
-        const historyData = historySnapshot.val();
+          if (historySnapshot.exists()) {
+            const historyData = historySnapshot.val();
 
-        await set(historyRef, {
-          ...historyData,
-          [timeEnded.toString()]: {
+            await set(historyRef, {
+              ...historyData,
+              [timeEnded.toString()]: {
+                ...selectedSchedule,
+                timeEnded: timeEnded,
+              },
+            });
+          } else {
+            await set(historyRef, {
+              [timeEnded.toString()]: {
+                ...selectedSchedule,
+                timeEnded: timeEnded,
+              },
+            });
+          }
+
+          console.log("History Entry Added:", {
             ...selectedSchedule,
             timeEnded: timeEnded,
-          },
-        });
-      } else {
-        await set(historyRef, {
-          [timeEnded.toString()]: {
-            ...selectedSchedule,
-            timeEnded: timeEnded,
-          },
-        });
+          });
+
+          await set(ref(database, `rooms/${selectedSchedule.room}`), null);
+
+          setRoomOccupied(false);
+          setErrorMessage('');
+          setSuccessMessage('You have successfully ended the class.');
+
+        } catch (error) {
+          console.error('Error updating history:', error);
+          setErrorMessage('Error ending the class. Please try again.');
+        }
       }
-
-      console.log("History Entry Added:", {
-        ...selectedSchedule,
-        timeEnded: timeEnded,
-      });
-
-      await set(ref(database, `rooms/${selectedSchedule.room}`), null);
-
-      setRoomOccupied(false);
-      setErrorMessage('');
-      setSuccessMessage('You have successfully ended the class.');
-    } catch (error) {
-      console.error('Error updating history:', error);
-      setErrorMessage('Error ending the class. Please try again.');
     }
-  }
-};
+  };
 
   // Function para sa pag-filter ng schedules base sa day
   const filterSchedulesByDay = (day) => {
