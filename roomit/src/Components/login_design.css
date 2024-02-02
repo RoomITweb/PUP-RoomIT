@@ -217,8 +217,24 @@ button[type="button"] {
   padding: 7px 20px; /* Ito ay nagbibigay ng padding sa loob ng button upang ito ay magmukhang mas malaki */
   font-family: 'Semibold', sans-serif;
   color: white;
-  margin-top: -10px;
+  margin-top: 5px;
   margin-left: 90px;
+}
+
+button[type="rstbutton"] {
+  background-color: #800000; /* Change to your desired button background color */
+  color: #fff;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  padding: 7px 20px; /* Ito ay nagbibigay ng padding sa loob ng button upang ito ay magmukhang mas malaki */
+  font-family: 'Semibold', sans-serif;
+  color: white;
+  margin-top: -10px;
+  margin-left: 80px;
 }
 
 button[type="submit"]:hover {

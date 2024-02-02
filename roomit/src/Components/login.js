@@ -104,7 +104,7 @@ const handleLogin = async (e) => {
                     />
                   </div>
                   <button
-                    type="button"
+                    type="rstbutton"
                     onClick={handleForgotPassword}
                     className="btn btn-primary"
                   >
