@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { getDatabase, ref, push, get, child } from 'firebase/database';
+import React, { useState, useEffect } from 'react';
+import { getDatabase, ref, push, get, child, remove } from 'firebase/database';
 import { app } from './firebase';
 import 'bootstrap/dist/css/bootstrap.css';
 
@@ -11,6 +11,31 @@ function AddSubject() {
   const [creditUnit, setCreditUnit] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [subjects, setSubjects] = useState([]);
+
+  useEffect(() => {
+    // Fetch subjects from Firebase Realtime Database
+    const fetchSubjects = async () => {
+      try {
+        const database = getDatabase(app);
+        const subjectsRef = ref(database, 'subjects');
+
+        const snapshot = await get(child(subjectsRef, '/'));
+        if (snapshot.exists()) {
+          const subjectsData = snapshot.val();
+          const subjectsArray = Object.keys(subjectsData).map((key) => ({
+            id: key,
+            ...subjectsData[key],
+          }));
+          setSubjects(subjectsArray);
+        }
+      } catch (error) {
+        console.error('Error fetching subjects:', error);
+      }
+    };
+
+    fetchSubjects();
+  }, []); // Empty dependency array to fetch subjects only once on component mount
 
   const isDuplicateSubject = async (code, description) => {
     try {
@@ -79,6 +104,25 @@ function AddSubject() {
         setSuccessMessage('');
       });
   };  
+
+  const handleDeleteSubject = async (id) => {
+    try {
+      const database = getDatabase(app);
+      const subjectsRef = ref(database, 'subjects');
+
+      // Remove subject from Firebase Realtime Database
+      await remove(child(subjectsRef, id));
+
+      // Update local state after deletion
+      setSubjects((prevSubjects) => prevSubjects.filter((subject) => subject.id !== id));
+      setSuccessMessage('');
+      setErrorMessage('');
+    } catch (error) {
+      console.error('Error deleting subject:', error);
+      setErrorMessage('An error occurred while deleting the subject. Please try again.');
+      setSuccessMessage('');
+    }
+  };
 
   return (
     <div className="add-subject-container">
@@ -153,7 +197,36 @@ function AddSubject() {
 
       {errorMessage && <p className="text-danger mt-3">{errorMessage}</p>}
       {successMessage && <p className="text-success mt-3">{successMessage}</p>}
-      
+
+      {/* Display subjects as a table */}
+      <div className="mt-4 table-container overflow-auto">
+        <h3>Subjects List</h3>
+        <table className="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Subject Code</th>
+              <th>Subject Description</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {subjects.map((subject) => (
+              <tr key={subject.id}>
+                <td>{subject.subjectCode}</td>
+                <td>{subject.subjectDescription}</td>
+                <td>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleDeleteSubject(subject.id)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
