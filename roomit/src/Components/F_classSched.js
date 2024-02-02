@@ -18,9 +18,9 @@ function FacultySchedule() {
   const [roomOccupied, setRoomOccupied] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scanMessage, setScanMessage] = useState('');
-  const [selectedDay, setSelectedDay] = useState('All');
-  const [selectedSchoolYear, setSelectedSchoolYear] = useState('All');
-  const [selectedSemester, setSelectedSemester] = useState('All');
+  const [selectedDay, setSelectedDay] = useState('');
+  const [selectedSchoolYear, setSelectedSchoolYear] = useState('');
+  const [selectedSemester, setSelectedSemester] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -321,7 +321,7 @@ function FacultySchedule() {
                       }}
                       value={selectedSchoolYear}
                     >
-                      <option value="" disabled hidden>Choose a School Year</option>
+                      <option value="" disabled hidden>School Year</option>
                       <option value="All">All</option>
                       <option value="2022-2023">2022-2023</option>
                       <option value="2023-2024">2023-2024</option>
@@ -338,7 +338,7 @@ function FacultySchedule() {
                       }}
                       value={selectedSemester}
                     >
-                      <option value="" disabled hidden>Choose a Semester</option>
+                      <option value="" disabled hidden>Semester</option>
                       <option value="All">All</option>
                       <option value="1st Semester">1st Semester</option>
                       <option value="2nd Semester">2nd Semester</option>
@@ -356,7 +356,7 @@ function FacultySchedule() {
                       }}
                       value={selectedDay}
                     >
-                      <option value="" disabled hidden>Choose a Day</option>
+                      <option value="" disabled hidden>Day</option>
                       <option value="All">All</option>
                       <option value="Mon/Wed">Mon/Wed</option>
                       <option value="Tue/Thurs">Tue/Thurs</option>
