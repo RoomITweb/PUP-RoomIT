@@ -218,7 +218,7 @@ button[type="button"] {
   font-family: 'Semibold', sans-serif;
   color: white;
   margin-top: 5px;
-  margin-left: 90px;
+  margin-left: 77px;
 }
 
 button[type="rstbutton"] {
@@ -234,7 +234,7 @@ button[type="rstbutton"] {
   font-family: 'Semibold', sans-serif;
   color: white;
   margin-top: -10px;
-  margin-left: 80px;
+  margin-left: 67px;
 }
 
 button[type="submit"]:hover {
