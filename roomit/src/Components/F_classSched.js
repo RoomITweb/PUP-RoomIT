@@ -216,7 +216,6 @@ function FacultySchedule() {
       console.log("Selected Schedule not found.");
     }
 
-    setAttendingClass(false);
     setShowScanner(false);
 
     if (auth.currentUser) {
@@ -261,7 +260,8 @@ function FacultySchedule() {
           });
 
           await set(ref(database, `rooms/${selectedSchedule.room}`), null);
-
+         
+          setAttendingClass(false);
           setRoomOccupied(false);
           setErrorMessage('');
           setSuccessMessage('You have successfully ended the class.');
