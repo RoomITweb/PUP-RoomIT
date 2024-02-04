@@ -211,7 +211,7 @@ function FacultySchedule() {
     if (selectedScheduleSnapshot.exists()) {
      selectedSchedule = selectedScheduleSnapshot.val();
       setSelectedSchedule(selectedSchedule);
-      console.log("Selected Schedule:", selectedSchedule[0]);
+      console.log("Selected Schedule:", selectedSchedule);
     } else {
       console.log("Selected Schedule not found.");
     }
@@ -230,7 +230,6 @@ function FacultySchedule() {
         
         const timeEnded = Date.now();
         const historyRef = ref(database, `history`);
-        const roomsRef = ref(database, `rooms`);
 
         try {
           const historySnapshot = await get(historyRef);
@@ -261,7 +260,7 @@ function FacultySchedule() {
           });
           console.log("Selected Room:", selectedSchedule.room);
 
-          await set(ref(roomsRef, `${selectedSchedule.room}`), null);
+          await set(ref(database, `rooms/${selectedSchedule.room}`), null);
          
           setAttendingClass(false);
           setRoomOccupied(false);
