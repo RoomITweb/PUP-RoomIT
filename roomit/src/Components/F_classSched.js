@@ -211,7 +211,7 @@ function FacultySchedule() {
     if (selectedScheduleSnapshot.exists()) {
      selectedSchedule = selectedScheduleSnapshot.val();
       setSelectedSchedule(selectedSchedule);
-      console.log("Selected Schedule:", selectedSchedule);
+      console.log("Selected Schedule:", selectedSchedule[0]);
     } else {
       console.log("Selected Schedule not found.");
     }
