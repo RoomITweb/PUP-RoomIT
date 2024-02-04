@@ -220,11 +220,14 @@ function FacultySchedule() {
 
     if (auth.currentUser) {
       const userUid = auth.currentUser.uid;
+      console.log("current user", auth.currentUser);
 
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
       set(ref(database, `users/${userUid}/attendingClass`), null);
 
       if (selectedSchedule !== null && selectedSchedule !== undefined) {
+        console.log("selected schedule", selectedSchedule);
+
         const timeEnded = Date.now();
         const historyRef = ref(database, `history`);
 
@@ -232,6 +235,7 @@ function FacultySchedule() {
           const historySnapshot = await get(historyRef);
 
           if (historySnapshot.exists()) {
+            console.log("history snapshot", historySnapshot);
             const historyData = historySnapshot.val();
 
             await set(historyRef, {
