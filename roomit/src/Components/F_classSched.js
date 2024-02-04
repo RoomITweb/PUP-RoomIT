@@ -224,10 +224,10 @@ function FacultySchedule() {
 
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
       set(ref(database, `users/${userUid}/attendingClass`), null);
+      console.log("selected schedule", selectedSchedule);
 
       if (selectedSchedule !== null) {
-        console.log("selected schedule", selectedSchedule);
-
+        
         const timeEnded = Date.now();
         const historyRef = ref(database, `history`);
 
