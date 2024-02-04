@@ -206,9 +206,10 @@ function FacultySchedule() {
   const handleEndClass = async () => {
     const selectedScheduleRef = ref(database, `rooms`);
     const selectedScheduleSnapshot = await get(selectedScheduleRef);
+    let selectedSchedule;
 
     if (selectedScheduleSnapshot.exists()) {
-      const selectedSchedule = selectedScheduleSnapshot.val();
+      selectedSchedule = selectedScheduleSnapshot.val();
       setSelectedSchedule(selectedSchedule);
       console.log("Selected Schedule:", selectedSchedule);
     } else {
