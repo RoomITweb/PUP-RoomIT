@@ -206,10 +206,9 @@ function FacultySchedule() {
   const handleEndClass = async () => {
     const selectedScheduleRef = ref(database, `rooms`);
     const selectedScheduleSnapshot = await get(selectedScheduleRef);
-    let selectedSchedule;
 
     if (selectedScheduleSnapshot.exists()) {
-     selectedSchedule = selectedScheduleSnapshot.val();
+      const selectedSchedule = selectedScheduleSnapshot.val();
       setSelectedSchedule(selectedSchedule);
       console.log("Selected Schedule:", selectedSchedule);
     } else {
@@ -220,14 +219,11 @@ function FacultySchedule() {
 
     if (auth.currentUser) {
       const userUid = auth.currentUser.uid;
-      console.log("current user", auth.currentUser);
 
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
       set(ref(database, `users/${userUid}/attendingClass`), null);
-      console.log("selected schedule", selectedSchedule);
 
       if (selectedSchedule !== null) {
-        
         const timeEnded = Date.now();
         const historyRef = ref(database, `history`);
 
@@ -235,7 +231,6 @@ function FacultySchedule() {
           const historySnapshot = await get(historyRef);
 
           if (historySnapshot.exists()) {
-            console.log("history snapshot", historySnapshot);
             const historyData = historySnapshot.val();
 
             await set(historyRef, {
@@ -258,13 +253,9 @@ function FacultySchedule() {
             ...selectedSchedule,
             timeEnded: timeEnded,
           });
-          console.log("Selected Room:", selectedSchedule.room);
-
-           // Set selectedScheduleSnapshot to null after successfully ending the class
-          setSelectedSchedule(null);
 
           await set(ref(database, `rooms/${selectedSchedule.room}`), null);
-         
+
           setAttendingClass(false);
           setRoomOccupied(false);
           setErrorMessage('');
