@@ -260,6 +260,9 @@ function FacultySchedule() {
           });
           console.log("Selected Room:", selectedSchedule.room);
 
+           // Set selectedScheduleSnapshot to null after successfully ending the class
+          setSelectedSchedule(null);
+
           await set(ref(database, `rooms/${selectedSchedule.room}`), null);
          
           setAttendingClass(false);
