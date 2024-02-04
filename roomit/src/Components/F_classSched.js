@@ -230,6 +230,7 @@ function FacultySchedule() {
         
         const timeEnded = Date.now();
         const historyRef = ref(database, `history`);
+        const roomsRef = ref(database, `rooms`);
 
         try {
           const historySnapshot = await get(historyRef);
@@ -258,8 +259,9 @@ function FacultySchedule() {
             ...selectedSchedule,
             timeEnded: timeEnded,
           });
+          console.log("Selected Room:", selectedSchedule.room);
 
-          await set(ref(database, `rooms/${selectedSchedule.room}`), null);
+          await set(ref(roomsRef, `${selectedSchedule.room}`), null);
          
           setAttendingClass(false);
           setRoomOccupied(false);
