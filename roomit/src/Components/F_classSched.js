@@ -206,16 +206,16 @@ function FacultySchedule() {
   const handleEndClass = async () => {
     const selectedScheduleRef = ref(database, `rooms`);
     const selectedScheduleSnapshot = await get(selectedScheduleRef);
-    let selectedSchedule;
 
     if (selectedScheduleSnapshot.exists()) {
-      selectedSchedule = selectedScheduleSnapshot.val();
+      const selectedSchedule = selectedScheduleSnapshot.val();
       setSelectedSchedule(selectedSchedule);
       console.log("Selected Schedule:", selectedSchedule);
     } else {
       console.log("Selected Schedule not found.");
     }
 
+    setAttendingClass(false);
     setShowScanner(false);
 
     if (auth.currentUser) {
@@ -224,7 +224,7 @@ function FacultySchedule() {
       set(ref(database, `users/${userUid}/occupiedRoom`), null);
       set(ref(database, `users/${userUid}/attendingClass`), null);
 
-      if (selectedSchedule !== null) {
+      if (selectedSchedule !== null && selectedSchedule !== undefined) {
         const timeEnded = Date.now();
         const historyRef = ref(database, `history`);
 
@@ -257,7 +257,6 @@ function FacultySchedule() {
 
           await set(ref(database, `rooms/${selectedSchedule.room}`), null);
 
-          setAttendingClass(false);
           setRoomOccupied(false);
           setErrorMessage('');
           setSuccessMessage('You have successfully ended the class.');
