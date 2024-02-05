@@ -221,6 +221,7 @@ function FacultySchedule() {
     if (auth.currentUser) {
       const userUid = auth.currentUser.uid;
 
+      set(ref(database, `users/${userUid}/occupiedRoom`), null);
       set(ref(database, `users/${userUid}/attendingClass`), null);
 
       if (selectedSchedule !== null) {
@@ -254,7 +255,6 @@ function FacultySchedule() {
             timeEnded: timeEnded,
           });
 
-          await set(ref(database, `users/${userUid}/occupiedRoom`), null);
           await set(ref(database, `rooms/${selectedSchedule.room}`), null);
 
           setAttendingClass(false);
