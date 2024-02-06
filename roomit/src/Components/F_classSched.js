@@ -23,6 +23,7 @@ function FacultySchedule() {
   const [selectedSemester, setSelectedSemester] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [userPressedEndButton, setUserPressedEndButton] = useState(false);
 
   // Firebase authentication at database
   const auth = getAuth(app);
@@ -168,6 +169,8 @@ function FacultySchedule() {
     if (auth.currentUser) {
       const userUid = auth.currentUser.uid;
 
+      setUserPressedEndButton(false);
+
       const occupiedRoomRef = ref(database, `users/${userUid}/occupiedRoom`);
       const occupiedRoomSnapshot = await get(occupiedRoomRef);
 
@@ -204,7 +207,6 @@ function FacultySchedule() {
       await set(ref(database, `rooms/${selectedSchedule.room}`), scheduleData, currentTime);
       await set(ref(database, `users/${userUid}/occupiedRoom`), selectedSchedule.room);
 
-      setUserPressedEndButton(false);
       setRoomOccupied(true);
       setAttendingClass(true);
       setSuccessMessage('You have successfully attended the class.');
