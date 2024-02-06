@@ -92,6 +92,7 @@ function FacultySchedule() {
         }
 
         if (selectedScheduleSnapshot.exists() && occupiedRoomSnapshot.exists()) {
+          setSelectedSchedule (selectedSchedule);
           setRoomOccupied(true);
         } else {
           setRoomOccupied(false);
