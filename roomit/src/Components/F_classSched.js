@@ -116,6 +116,15 @@ function FacultySchedule() {
     };
   }, [auth, database, facultyName, selectedSchoolYear, selectedSemester, roomOccupied, attendingClass, selectedSchedule]);
 
+    // Effect hook para sa pag-check ng attendingClass variable at userPressedEndButton
+    useEffect(() => {
+    // Tignan kung may ina-attend na klase ang user at nag-press na sa pindutan
+    if (attendingClass && userPressedEndButton) {
+    // Tawagin ang handleEndClass function
+    handleEndClass();
+    }
+    }, [attendingClass, userPressedEndButton]);
+
   // Function para sa pagbukas ng scanner at pag-set ng message
   const handleOpenScanner = (subject) => {
     setSelectedSchedule(subject);
@@ -195,6 +204,7 @@ function FacultySchedule() {
       await set(ref(database, `rooms/${selectedSchedule.room}`), scheduleData, currentTime);
       await set(ref(database, `users/${userUid}/occupiedRoom`), selectedSchedule.room);
 
+      setUserPressedEndButton(false);
       setRoomOccupied(true);
       setAttendingClass(true);
       setSuccessMessage('You have successfully attended the class.');
