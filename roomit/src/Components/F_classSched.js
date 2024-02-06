@@ -85,6 +85,7 @@ function FacultySchedule() {
         console.log('selectedScheduleSnapshot', selectedScheduleSnapshot.val());
         console.log('roomOccupied', roomOccupied);
         console.log('attendingClass', attendingClass);
+        console.log('selectedSchedule', selectedSchedule);
 
         if (attendingClassSnapshot.exists()) {
           setAttendingClass(true);
