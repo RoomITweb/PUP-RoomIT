@@ -95,6 +95,13 @@ function FacultySchedule() {
         } else {
           setRoomOccupied(false);
         }
+
+         // Retrieve selectedSchedule from local storage if exists
+         const savedSelectedSchedule = localStorage.getItem('selectedSchedule');
+         if (savedSelectedSchedule) {
+           setSelectedSchedule(JSON.parse(savedSelectedSchedule));
+          }
+
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -159,7 +166,7 @@ function FacultySchedule() {
   const handleAttendClass = async () => {
     if (auth.currentUser) {
       const userUid = auth.currentUser.uid;
-      
+
       const occupiedRoomRef = ref(database, `users/${userUid}/occupiedRoom`);
       const occupiedRoomSnapshot = await get(occupiedRoomRef);
 
@@ -195,6 +202,8 @@ function FacultySchedule() {
 
       await set(ref(database, `rooms/${selectedSchedule.room}`), scheduleData, currentTime);
       await set(ref(database, `users/${userUid}/occupiedRoom`), selectedSchedule.room);
+
+      localStorage.setItem('selectedSchedule', JSON.stringify(selectedSchedule));
 
       setRoomOccupied(true);
       setAttendingClass(true);
@@ -257,6 +266,9 @@ function FacultySchedule() {
           });
 
           await set(ref(database, `rooms/${selectedSchedule.room}`), null);
+
+          // Remove selectedSchedule mula sa localStorage
+          localStorage.removeItem('selectedSchedule');
 
           setRoomOccupied(false);
           setErrorMessage('');
