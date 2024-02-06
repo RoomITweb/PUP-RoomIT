@@ -23,7 +23,6 @@ function FacultySchedule() {
   const [selectedSemester, setSelectedSemester] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [userPressedEndButton, setUserPressedEndButton] = useState(false);
 
   // Firebase authentication at database
   const auth = getAuth(app);
@@ -92,7 +91,6 @@ function FacultySchedule() {
         }
 
         if (selectedScheduleSnapshot.exists() && occupiedRoomSnapshot.exists()) {
-          setSelectedSchedule (selectedSchedule);
           setRoomOccupied(true);
         } else {
           setRoomOccupied(false);
@@ -118,15 +116,6 @@ function FacultySchedule() {
       unsubscribe();
     };
   }, [auth, database, facultyName, selectedSchoolYear, selectedSemester, roomOccupied, attendingClass, selectedSchedule]);
-
-    // Effect hook para sa pag-check ng attendingClass variable at userPressedEndButton
-    useEffect(() => {
-    // Tignan kung may ina-attend na klase ang user at nag-press na sa pindutan
-    if (attendingClass && userPressedEndButton) {
-    // Tawagin ang handleEndClass function
-    handleEndClass();
-    }
-    }, [attendingClass, userPressedEndButton]);
 
   // Function para sa pagbukas ng scanner at pag-set ng message
   const handleOpenScanner = (subject) => {
@@ -170,9 +159,7 @@ function FacultySchedule() {
   const handleAttendClass = async () => {
     if (auth.currentUser) {
       const userUid = auth.currentUser.uid;
-
-      setUserPressedEndButton(false);
-
+      
       const occupiedRoomRef = ref(database, `users/${userUid}/occupiedRoom`);
       const occupiedRoomSnapshot = await get(occupiedRoomRef);
 
