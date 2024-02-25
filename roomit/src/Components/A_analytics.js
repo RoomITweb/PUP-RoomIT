@@ -312,18 +312,6 @@ function Analytics() {
     setSelectedCourse('');
   };
 
-  const handleRoomChange = (event) => {
-    setSelectedRooms(event.target.value);
-  };
-
-  const handleWeekChange = (event) => {
-    setSelectedWeek(event.target.value);
-  };
-
-  const handleMonthChange = (event) => {
-    setSelectedMonth(event.target.value);
-  };
-
   const handleCourseChange = (event) => {
     setSelectedCourse(event.target.value);
   };
