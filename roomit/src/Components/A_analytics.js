@@ -437,6 +437,7 @@ function Analytics() {
   const calculateRoomUsage = () => {
     const scienceBuildingRooms = buildingsAndRooms['Science Building'];
     const nantesBuildingRooms = buildingsAndRooms['Nantes Building'];
+    const suarezBuildingRooms = buildingsAndRooms['Suarez Building'];
 
     const scienceBuildingData = Object.entries(roomStatisticsData)
       .filter(([room]) => scienceBuildingRooms.includes(room))
@@ -446,7 +447,11 @@ function Analytics() {
       .filter(([room]) => nantesBuildingRooms.includes(room))
       .sort((a, b) => b[1] - a[1]);
 
-    const allRooms = [...buildingsAndRooms['Science Building'], ...buildingsAndRooms['Nantes Building']];
+      const suarezBuildingData = Object.entries(roomStatisticsData)
+      .filter(([room]) => suarezBuildingRooms.includes(room))
+      .sort((a, b) => b[1] - a[1]);
+
+    const allRooms = [...buildingsAndRooms['Science Building'], ...buildingsAndRooms['Nantes Building'], ...buildingsAndRooms['Suarez Building']];
 
     const roomsWithoutRecords = allRooms.filter(room => !roomStatisticsData.hasOwnProperty(room));
 
@@ -460,14 +465,19 @@ function Analytics() {
     const mostUsedNantesRoom = nantesBuildingData[0] ? nantesBuildingData[0][0] : null;
     const leastUsedNantesRoom = nantesBuildingData[nantesBuildingData.length - 1] ? nantesBuildingData[nantesBuildingData.length - 1][0] : null;
 
+    const mostUsedSuarezRoom = suarezBuildingData[0] ? suarezBuildingData[0][0] : null;
+    const leastUsedSuarezRoom = suarezBuildingData[suarezBuildingData.length - 1] ? suarezBuildingData[suarezBuildingData.length - 1][0] : null;
+
     setMostUsedRoom({
       'Science Building': mostUsedScienceRoom,
       'Nantes Building': mostUsedNantesRoom,
+      'Suarez Building': mostUsedSuarezRoom,
     });
 
     setLeastUsedRoom({
       'Science Building': leastUsedScienceRoom,
       'Nantes Building': leastUsedNantesRoom,
+      'Suarez Building': leastUsedSuarezRoom,
     });
   };
 
@@ -507,46 +517,6 @@ function Analytics() {
           </option>
         ))}
       </select>
-
-{/* Room Filter */}
-{selectedBuilding && (
-  <div className="mb-3">
-    <label htmlFor="rooms" className="form-label">Select Room(s):</label>
-    <select id="rooms" className="form-select" multiple value={selectedRooms} onChange={handleRoomChange}>
-      {buildingsAndRooms[selectedBuilding].map(room => (
-        <option key={room} value={room}>
-          Room {room}
-        </option>
-      ))}
-    </select>
-  </div>
-)}
-
-{/* Week Filter */}
-<div className="mb-3">
-  <label htmlFor="week" className="form-label">Select Week:</label>
-  <select id="week" className="form-select" value={selectedWeek} onChange={handleWeekChange}>
-    <option value="">All Weeks</option>
-    {allWeeks.map(week => (
-      <option key={week} value={week}>
-        Week {week}
-      </option>
-    ))}
-  </select>
-</div>
-
-{/* Month Filter */}
-<div className="mb-3">
-  <label htmlFor="month" className="form-label">Select Month:</label>
-  <select id="month" className="form-select" value={selectedMonth} onChange={handleMonthChange}>
-    <option value="">All Months</option>
-    {allMonths.map(month => (
-      <option key={month} value={month}>
-        {month}
-      </option>
-    ))}
-  </select>
-</div>
 
 {/* Course Filter */}
 <div className="mb-3">
