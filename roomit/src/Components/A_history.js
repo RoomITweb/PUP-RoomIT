@@ -26,6 +26,10 @@ function FacultyScanHistory() {
         if (historySnapshot.exists()) {
           const historyData = historySnapshot.val();
           const historyArray = Object.keys(historyData).map(key => historyData[key]);
+
+          // Sort by attendTime in descending order (latest first)
+          historyArray.sort((a, b) => new Date(b.attendTime) - new Date(a.attendTime));
+
           setHistoryData(historyArray);
         }
       } catch (error) {
@@ -66,15 +70,6 @@ function FacultyScanHistory() {
       }
     }
   };
-
-  useEffect(() => {
-    let sortedHistoryData = [...historyData];
-  
-    // Sort by attendTime in descending order (latest first)
-    sortedHistoryData.sort((a, b) => new Date(b.attendTime) - new Date(a.attendTime));
-  
-    setHistoryData(sortedHistoryData);
-  }, [historyData]);
 
   useEffect(() => {
     let filteredResults = [...historyData];

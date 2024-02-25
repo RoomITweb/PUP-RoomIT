@@ -110,11 +110,9 @@ function AddSchedule() {
     if (subjectCode && subjectCodes[subjectCode]) {
       const selectedSubject = subjectCodes[subjectCode];
       setSubjectDescription(selectedSubject.subjectDescription);
-      setCourse(selectedSubject.course);
       setCreditUnits(selectedSubject.creditUnit);
     } else {
       setSubjectDescription('');
-      setCourse('');
       setCreditUnits('');
     }
   }, [subjectCode, subjectCodes]);

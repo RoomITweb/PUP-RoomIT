@@ -5,7 +5,6 @@ import 'bootstrap/dist/css/bootstrap.css';
 
 
 function AddSubject() {
-  const [course, setCourse] = useState('');
   const [subjectCode, setSubjectCode] = useState('');
   const [subjectDescription, setSubjectDescription] = useState('');
   const [creditUnit, setCreditUnit] = useState('');
@@ -64,7 +63,7 @@ function AddSubject() {
   };
 
   const handleAddSubject = async () => {
-    if (!course || !subjectCode || !subjectDescription || !creditUnit) {
+    if (!subjectCode || !subjectDescription || !creditUnit) {
       setErrorMessage('Please fill in all fields.');
       return;
     }
@@ -81,7 +80,6 @@ function AddSubject() {
     const database = getDatabase(app);
     const subjectsRef = ref(database, 'subjects');
     const newSubject = {
-      course,
       subjectCode,
       subjectDescription,
       creditUnit,
@@ -93,7 +91,6 @@ function AddSubject() {
         setErrorMessage('');
   
         // Clear input fields
-        setCourse('');
         setSubjectCode('');
         setSubjectDescription('');
         setCreditUnit('');
@@ -128,19 +125,6 @@ function AddSubject() {
     <div className="add-subject-container">
       <h2>Add Subject</h2>
       <form onSubmit={handleAddSubject}>
-
-        <div className="form-group">
-          <label className = "placeholder-opt" htmlFor="course">Course & Section:</label>
-          <input
-           className="form-control"
-            placeholder="Course & Section"
-            type="text"
-            id="course"
-            value={course}
-            onChange={(e) => setCourse(e.target.value)}
-            required
-          />
-        </div>
 
         <div className="form-group">
           <label htmlFor="subjectCode">Subject Code:</label>
