@@ -320,8 +320,8 @@ function FacultySchedule() {
         <div className="row">
           <div className="col-12">
             <div className="content-wrapper">
-              <h2 style={{ marginBottom: '20px', textAlign: 'left' }}>My Schedule</h2>
-              <p style={{ fontFamily: 'Bold', marginBottom: '20px' }}>Welcome, {facultyName}!</p>
+            <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>My Schedule</h2>
+            <p style={{ fontFamily: 'Regular', marginBottom: '20px' }}>Welcome, {facultyName}!</p>
 
               <div className="row">
                 <div className="content-wrapper">
@@ -334,10 +334,10 @@ function FacultySchedule() {
                       }}
                       value={selectedSchoolYear}
                     >
-                      <option value="" disabled hidden>School Year</option>
-                      <option value="All">All</option>
-                      <option value="2022-2023">2022-2023</option>
-                      <option value="2023-2024">2023-2024</option>
+                    <option value="" disabled hidden>Choose a School Year</option>
+                    <option style={{ fontFamily: 'Regular'}}value="All">All</option>
+                    <option style={{ fontFamily: 'Regular'}}value="2022-2023">2022-2023</option>
+                    <option style={{ fontFamily: 'Regular'}}value="2023-2024">2023-2024</option>
                     </select>
                   </div>
                 </div>
@@ -351,11 +351,11 @@ function FacultySchedule() {
                       }}
                       value={selectedSemester}
                     >
-                      <option value="" disabled hidden>Semester</option>
-                      <option value="All">All</option>
-                      <option value="1st Semester">1st Semester</option>
-                      <option value="2nd Semester">2nd Semester</option>
-                      <option value="Summer">Summer</option>
+                    <option style={{ fontFamily: 'Regular'}}value="" disabled hidden>Choose a Semester</option>
+                    <option style={{ fontFamily: 'Regular'}}value="All">All</option>
+                    <option style={{ fontFamily: 'Regular'}}value="1st Semester">1st Semester</option>
+                    <option style={{ fontFamily: 'Regular'}}value="2nd Semester">2nd Semester</option>
+                    <option style={{ fontFamily: 'Regular'}}value="Summer">Summer</option>
                     </select>
                   </div>
                 </div>
@@ -369,17 +369,17 @@ function FacultySchedule() {
                       }}
                       value={selectedDay}
                     >
-                      <option value="" disabled hidden>Day</option>
-                      <option value="All">All</option>
-                      <option value="Mon/Wed">Mon/Wed</option>
-                      <option value="Tue/Thurs">Tue/Thurs</option>
-                      <option value="Fri/Sat">Fri/Sat</option>
-                      <option value="Monday">Monday</option>
-                      <option value="Tuesday">Tuesday</option>
-                      <option value="Wednesday">Wednesday</option>
-                      <option value="Thursday">Thursday</option>
-                      <option value="Friday">Friday</option>
-                      <option value="Saturday">Saturday</option>
+                    <option style={{ fontFamily: 'Regular'}}value="" disabled hidden>Choose a Day</option>
+                    <option style={{ fontFamily: 'Regular'}}value="All">All</option>
+                    <option style={{ fontFamily: 'Regular'}}value="Mon/Wed">Mon/Wed</option>
+                    <option style={{ fontFamily: 'Regular'}}value="Tue/Thurs">Tue/Thurs</option>
+                    <option style={{ fontFamily: 'Regular'}}value="Fri/Sat">Fri/Sat</option>
+                    <option style={{ fontFamily: 'Regular'}}value="Monday">Monday</option>
+                    <option style={{ fontFamily: 'Regular'}}value="Tuesday">Tuesday</option>
+                    <option style={{ fontFamily: 'Regular'}}value="Wednesday">Wednesday</option>
+                    <option style={{ fontFamily: 'Regular'}}value="Thursday">Thursday</option>
+                    <option style={{ fontFamily: 'Regular'}}value="Friday">Friday</option>
+                    <option style={{ fontFamily: 'Regular'}}value="Saturday">Saturday</option>
                     </select>
                   </div>
                 </div>

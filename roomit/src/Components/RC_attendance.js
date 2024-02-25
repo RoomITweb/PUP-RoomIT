@@ -119,21 +119,21 @@ function RcAttendance({ facultySchedules }) {
     <div style={containerStyle}>
       <h2>Attendance</h2>
       <div style={buildingSelectorStyle}>
-        <label>Select Building</label>
+      <label style={{fontFamily: 'Regular'}}>Select Building</label>
         <div className="select-dropdown">
         <select
           onChange={handleBuildingChange}
           value={selectedBuilding}
           style = {{marginBottom: '20px', marginTop: '20px'}}
         >
-          <option value="All">Building</option>
-          <option value="Nantes Building">Nantes Building</option>
-          <option value="Science Building">Science Building</option>
-          <option value="Suarez Building">Suarez Building</option>
-        </select>
+          <option style={{fontFamily: 'Regular'}}value="All">Building</option>
+          <option style={{fontFamily: 'Regular'}}value="Nantes Building">Nantes Building</option>
+          <option style={{fontFamily: 'Regular'}}value="Science Building">Science Building</option>
+          <option style={{fontFamily: 'Regular'}}value="Suarez Building">Suarez Building</option>
+          </select>
         </div>
       </div>
-      <p style={{marginBottom: '10px', textTransform: 'uppercase'}}>{selectedBuilding}</p>
+      <p style={{fontFamily: 'Bold', marginBottom: '10px', textTransform: 'uppercase'}}>{selectedBuilding}</p>
       <table style={{ width: '100%' }}>
         <thead>
           <tr>
