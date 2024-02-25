@@ -68,6 +68,15 @@ function FacultyScanHistory() {
   };
 
   useEffect(() => {
+    let sortedHistoryData = [...historyData];
+  
+    // Sort by attendTime in descending order (latest first)
+    sortedHistoryData.sort((a, b) => new Date(b.attendTime) - new Date(a.attendTime));
+  
+    setHistoryData(sortedHistoryData);
+  }, [historyData]);
+
+  useEffect(() => {
     let filteredResults = [...historyData];
 
     if (buildingFilter !== 'All') {
