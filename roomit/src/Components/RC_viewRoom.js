@@ -8,9 +8,11 @@ function RcViewRoom({ facultySchedules }) {
   const [rooms, setRooms] = useState({});
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [roomInfoModalOpen, setRoomInfoModalOpen] = useState(false);
-  const [selectedBuilding, setSelectedBuilding] = useState('All'); 
+  const [selectedBuilding, setSelectedBuilding] = useState(false); 
+  const [facultySchedulesInRoom, setFacultySchedulesInRoom] = useState([]);
   const database = getDatabase(app);
-
+  const dayWord = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  let dayNamePrefix = '';
   useEffect(() => {
     const roomsRef = ref(database, 'rooms');
 
@@ -36,6 +38,24 @@ function RcViewRoom({ facultySchedules }) {
     }
   };
 
+  const getFacultySchedulesInRoom = (room) => {
+    const schedulesRef = ref(database, 'schedules');
+  
+    onValue(schedulesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const schedulesData = snapshot.val();
+        const currentDate = new Date();
+        dayNamePrefix = dayWord[currentDate.getDay()].slice(0, 3);
+        const schedulesInRoom = Object.values(schedulesData).filter(
+          (schedule) => schedule.room === room && schedule.day.includes(dayNamePrefix)
+        );
+        setFacultySchedulesInRoom(schedulesInRoom);
+      } else {
+        setFacultySchedulesInRoom([]);
+      }
+    });
+  };    
+
   const containerStyle = {
     maxWidth: '800px',
     width: '100%',
@@ -45,6 +65,32 @@ function RcViewRoom({ facultySchedules }) {
     border: '1px solid #ddd',
     borderRadius: '5px',
     boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+  };
+
+  const roomContainerStyle = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  };
+
+  const roomStyle = {
+    width: '48%',
+    padding: '20px',
+    marginBottom: '20px',
+    border: '1px solid #ddd',
+    borderRadius: '5px',
+    boxShadow: '0 0 5px rgba(0, 0, 0, 0.1)',
+    cursor: 'pointer',
+  };
+
+  const roomOccupiedStyle = {
+    backgroundColor: 'maroon',
+    color: 'white',
+  };
+
+  const roomAvailableStyle = {
+    backgroundColor: 'green',
+    color: 'white',
   };
 
   const buildingSelectorStyle = {
@@ -69,10 +115,9 @@ function RcViewRoom({ facultySchedules }) {
   };
 
   const roomClickHandler = (room) => {
-    if (rooms[room] && rooms[room].facultyName) {
-      setSelectedRoom(room);
-      setRoomInfoModalOpen(true);
-    }
+    setSelectedRoom(room);
+    setRoomInfoModalOpen(true);
+    getFacultySchedulesInRoom(room);
   };
 
   return (
@@ -87,7 +132,7 @@ function RcViewRoom({ facultySchedules }) {
           value={selectedBuilding}
           style={{marginBottom: '20px', marginTop: '20px'}}
         >
-          <option value="All">All</option>
+          <option value="All">Building</option>
           <option value="Nantes Building">Nantes Building</option>
           <option value="Science Building">Science Building</option>
           <option value="Suarez Building">Suarez Building</option>
@@ -122,24 +167,52 @@ function RcViewRoom({ facultySchedules }) {
         );
       })}
     </div>
-      {selectedRoom && roomInfoModalOpen && (
-           <div className="room-info-modal">
-            <div className="room-info-content">
-            <h3>Room Info</h3>
-            <p>Room: {selectedRoom}</p>
-            {rooms[selectedRoom] && rooms[selectedRoom].facultyName && (
-              <>
-                <p>Occupied by: {rooms[selectedRoom].facultyName}</p>
-                <p>Subject: {rooms[selectedRoom].subjectCode}: {rooms[selectedRoom].subjectDescription}</p>
-                <p>Course: {rooms[selectedRoom].course}</p>
-                <p>Day: {rooms[selectedRoom].day}</p>
-                <p>Time: {rooms[selectedRoom].time}</p>
-              </>
-            )}
-            <button onClick={() => setRoomInfoModalOpen(false)}>Close</button>
-          </div>
-        </div>
+    {selectedRoom && roomInfoModalOpen && (
+  <div className="room-info-modal">
+    <div className="room-info-content">
+      <h3 style={{ fontFamily: 'Heavy'}}>ROOM INFO</h3>
+      <p>Room: {selectedRoom}</p>
+      {rooms[selectedRoom] && rooms[selectedRoom].facultyName ? (
+        <>
+          <p>Occupied by: {rooms[selectedRoom].facultyName}</p>
+          <p>Subject: {rooms[selectedRoom].subjectCode}: {rooms[selectedRoom].subjectDescription}</p>
+          <p>Course: {rooms[selectedRoom].course}</p>
+          <p>Day: {rooms[selectedRoom].day}</p>
+          <p>Time: {rooms[selectedRoom].time}</p>
+        </>
+      ) : (
+        <>
+          <p>No current occupancy.</p>
+{facultySchedulesInRoom.length > 0 && (
+  <>
+    <table>
+      <thead>
+        <tr>
+          <th>Faculty</th>
+          <th>Subject</th>
+          <th>Time</th>
+          <th>Day</th>
+        </tr>
+      </thead>
+      <tbody>
+        {facultySchedulesInRoom.map((schedule, index) => (
+          <tr key={index}>
+            <td>{schedule.facultyName}</td>
+            <td>{schedule.subjectDescription}</td>
+            <td>{schedule.time}</td>
+            <td>{schedule.day}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </>
+)}
+        </>
       )}
+      <button onClick={() => setRoomInfoModalOpen(false)}>Close</button>
+    </div>
+  </div>
+    )}
     </div>
   );
 }

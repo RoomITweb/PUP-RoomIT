@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getDatabase, ref, get } from 'firebase/database';
+import { getDatabase, ref, get, onValue, off } from 'firebase/database';
 import { app } from './firebase';
 import 'bootstrap/dist/css/bootstrap.css';
 import Chart from 'chart.js/auto';
+const dayWord = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 
 function calculateDurationInHours(attendTime, timeEnded) {
   const start = new Date(attendTime);
@@ -32,7 +34,7 @@ function calculateRoomUsageByCourse(historyData, selectedFromDate, selectedToDat
   historyData.forEach(entry => {
     const courseKey = entry.course;
     const roomKey = entry.room;
-    
+
     if (!roomUsageByCourse[courseKey]) {
       roomUsageByCourse[courseKey] = {};
     }
@@ -74,7 +76,13 @@ function createChart(ctx, labels, data, type) {
 }
 
 function Analytics() {
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [dayNamePrefix, setDayNamePrefix] = useState('');
+  const [viewSelectedRoom, setViewSelectedRoom] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
   const [historyData, setHistoryData] = useState([]);
+  const [historyDataStatistics, setHistoryDataStatistics] = useState([]);
+  const [scheduleDataRoom, setScheduleData] = useState([]);
   const [buildingStatisticsData, setBuildingStatisticsData] = useState({});
   const [roomStatisticsData, setRoomStatisticsData] = useState({});
   const [selectedBuilding, setSelectedBuilding] = useState('');
@@ -83,6 +91,7 @@ function Analytics() {
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedFromDate, setSelectedFromDate] = useState('');
+  const [selectedFromDateRoomMonitoring, setSelectedFromDateRoomMonitoring] = useState('');
   const [selectedToDate, setSelectedToDate] = useState('');
   const [filteredHistoryData, setFilteredHistoryData] = useState([]);
   const [mostUsedRoom, setMostUsedRoom] = useState(null);
@@ -90,7 +99,7 @@ function Analytics() {
   const [allWeeks, setAllWeeks] = useState([]);
   const [allMonths, setAllMonths] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
-
+  const [roomStat, setRoomStats] = useState({});
   const database = getDatabase(app);
   const buildingChartRef = useRef(null);
   const roomChartRef = useRef(null);
@@ -104,20 +113,73 @@ function Analytics() {
 
   const [roomRankings, setRoomRankings] = useState({});
   const [roomUsageByCourse, setRoomUsageByCourse] = useState({});
-
+  const dataBase = getDatabase(app);
   const buildingsAndRooms = {
     'Nantes Building': ['120', '121', '122', 'AVR', 'Keyboarding Lab', 'Speech Lab'],
     'Science Building': ['105', '106', '107', '108', '203', '204', '205', '206'],
     'Suarez Building': ['Com Lab 1', 'Com Lab 2'],
   };
 
+  useEffect(() => {
+    console.log('ChangesInHistory');
+    const historyRef = ref(dataBase, 'history');
+    onValue(historyRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        setHistoryDataStatistics(data);
+      }
+    });
+    return () => {
+    };
+  }, [dataBase]);
+
+  useEffect(() => {
+    const database = getDatabase(app);
+    const historyRef = ref(database, 'history');
+
+    const handleDataChange = (snapshot) => {
+      if (snapshot.exists()) {
+        const historyData = snapshot.val();
+        const historyArray = Object.keys(historyData).map(key => historyData[key]);
+
+        setHistoryDataStatistics(historyArray);
+        console.log('DETECT CHANGS')
+      }
+    };
+    onValue(historyRef, handleDataChange);
+    return () => off(historyRef, handleDataChange);
+  }, []); // No dependencies to trigger re-render on component mount only
+
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+  };
+  useEffect(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    setDayNamePrefix(dayWord[today.getDay()].slice(0, 3));
+    setSelectedFromDateRoomMonitoring(formattedDate);
+    setSelectedFromDate(formattedDate);
+  }, []);
+
+  // Event handler for changing the from date
+  // const handleFromDateRoomMonitoringChange = (event) => {
+  //   const selectedDate = event.target.value;
+  //   setSelectedFromDateRoomMonitoring(selectedDate);
+  //   const selectedDateObject = new Date(selectedDate);
+  //   const dayPrefix = dayWord[selectedDateObject.getDay()].slice(0, 3);
+  //   setDayNamePrefix(dayPrefix);
+  // };
   const calculateRoomUsageByBuilding = (selectedPeriod) => {
     const roomUsageByBuilding = {};
-  
+
     // Iterate over buildings
     Object.keys(buildingsAndRooms).forEach((building) => {
       const rooms = buildingsAndRooms[building];
-  
+
       // Calculate room usage for each room
       const roomUsage = rooms.map((room) => {
         const entriesForRoom = filteredHistoryData.filter((entry) => entry.room === room);
@@ -125,43 +187,43 @@ function Analytics() {
           (totalDuration, entry) => totalDuration + calculateDurationInHours(entry.attendTime, entry.timeEnded),
           0
         );
-  
+
         return { room, entryDurationForRoom };
       });
-  
+
       // Sort rooms by usage
       roomUsage.sort((a, b) => b.entryDurationForRoom - a.entryDurationForRoom);
-  
+
       // Set most and least used room for the building
       const mostUsedRoom = roomUsage[0];
       const leastUsedRoom = roomUsage[roomUsage.length - 1];
-  
+
       roomUsageByBuilding[building] = {
         mostUsedRoom,
         leastUsedRoom,
       };
     });
-  
+
     return roomUsageByBuilding;
   };
 
 
-  
+
   function calculateRoomRankingsByBuilding() {
     const roomRankingsByBuilding = {};
-  
+
     Object.keys(buildingsAndRooms).forEach(building => {
       const rooms = buildingsAndRooms[building];
       const roomRankings = rooms
         .map(room => ({ room, count: roomStatisticsData[room] || 0 }))
         .sort((a, b) => b.count - a.count);
-  
+
       roomRankingsByBuilding[building] = roomRankings;
     });
-  
+
     setRoomRankings(roomRankingsByBuilding);
   }
-  
+
   function createBarChart(ctx, labels, data) {
     return new Chart(ctx, {
       type: 'bar',
@@ -185,7 +247,8 @@ function Analytics() {
       }
     });
   }
-  
+
+
 
   useEffect(() => {
     const fetchHistoryData = async () => {
@@ -207,6 +270,149 @@ function Analytics() {
 
     fetchHistoryData();
   }, []);
+
+
+
+  useEffect(() => {
+    const fetchScheduleData = async () => {
+      try {
+        const database = getDatabase(app);
+        const scheduleRef = ref(database, 'schedules');
+        const scheduleSnapshot = await get(scheduleRef);
+        const historyRef = ref(database, 'history');
+        const historySnapshot = await get(historyRef);
+        if (historySnapshot.exists()) {
+          const historyData = historySnapshot.val();
+          const historyArray = Object.keys(historyData).map(key => historyData[key]);
+          setHistoryData(historyArray);
+          console.log("conslogHistoryData", historyArray)
+        }
+
+
+        if (scheduleSnapshot.exists()) {
+          const scheduleData = scheduleSnapshot.val();
+          const scheduleArray = Object.keys(scheduleData).map(key => scheduleData[key]);
+          setScheduleData(scheduleArray);
+          const roomStatistics = scheduleArray.reduce((stats, schedule) => {
+            const { room, roomOccupied, building } = schedule;
+            if (!stats[room]) {
+              stats[room] = {
+                totalItems: 0, occupiedItems: 0, room: room, building: building
+              };
+            }
+            stats[room].totalItems++;
+            if (roomOccupied === "1") {
+              stats[room].occupiedItems++;
+            }
+            return stats;
+          }, {});
+          console.log('roomstatistics', roomStatistics);
+
+          setRoomStats(roomStatistics);
+
+        }
+      } catch (error) {
+        console.error('Error fetching history data:', error);
+        // Handle error state if needed
+      }
+    };
+    fetchScheduleData();
+
+    // Fetch data every 3 seconds
+    // const interval = setInterval(fetchScheduleData, 3000);
+
+    // // Clear interval on component unmount
+    // return () => clearInterval(interval);
+  }, []);
+
+
+  useEffect(() => {
+    console.log("filterDateChangeDate")
+    const filteredDate = async () => {
+      try {
+        const database = getDatabase(app);
+        const scheduleRef = ref(database, 'schedules');
+        const scheduleSnapshot = await get(scheduleRef);
+        const historyRef = ref(database, 'history');
+        const historySnapshot = await get(historyRef);
+
+        if (historySnapshot.exists()) {
+          const historyDatar = historySnapshot.val();
+          const historyArray = Object.keys(historyData).map(key => historyData[key]);
+          setHistoryData(historyArray);
+        }
+
+        if (scheduleSnapshot.exists()) {
+          const scheduleData = scheduleSnapshot.val();
+          let scheduleArray = Object.keys(scheduleData).map(key => scheduleData[key]);
+          //   console.log("RRRRRRR", dayNamePrefix)
+          //     console.log("eeeeee", historyData)
+
+          scheduleArray = scheduleArray.filter(entry => entry.day.includes(dayNamePrefix));
+          scheduleArray.forEach(item => {
+            //  console.log("attendedtimeParse", parseDate(selectedFromDateRoomMonitoring))
+
+            const matchingEntry = historyDataStatistics.find(x => x.room === item.room && x.time.trim()===item.time.trim() && x.day === item.day && x.facultyName === item.facultyName && parseDate2(x.attendTime) === parseDate(selectedFromDateRoomMonitoring));
+            if (matchingEntry) {
+              if (matchingEntry) {
+                item.roomOccupied = '1';
+              } else {
+                item.roomOccupied = '0';
+                  console.log("not matched", parseDate(selectedFromDateRoomMonitoring))
+                  console.log("not matched v2", parseDate2(matchingEntry.attendTime))
+              }
+            } else {
+              item.roomOccupied = '0'; // Set roomOccupied to '0' if no matching entry is found
+            }
+          });
+          setScheduleData(scheduleArray);
+          //   console.log("dayNamePrefix array", scheduleArray)
+          const roomStatistics = scheduleArray.reduce((stats, schedule) => {
+            const { room, roomOccupied, building } = schedule;
+            if (!stats[room]) {
+              stats[room] = {
+                totalItems: 0, occupiedItems: 0, room: room, building: building
+              };
+            }
+            stats[room].totalItems++;
+            if (roomOccupied === "1") {
+              stats[room].occupiedItems++;
+            }
+            return stats;
+          }, {});
+          setRoomStats(roomStatistics);
+          console.log('RoomStatiscticsnewdata', roomStatistics);
+        }
+      } catch (error) {
+        console.error('Error fetching history data:', error);
+        // Handle error state if needed
+      }
+    };
+    filteredDate();
+  }, [selectedFromDateRoomMonitoring, historyDataStatistics]);
+
+  useEffect(() => {
+    const fetchSelectedRoom = async (selectedRoom) => {
+      try {
+        const database = getDatabase(app);
+        const scheduleRef = ref(database, 'schedules');
+        const scheduleSnapshot = await get(scheduleRef);
+        if (scheduleSnapshot.exists()) {
+          const scheduleData = scheduleSnapshot.val();
+          const schedulesInRoom = Object.values(scheduleData).filter(
+            (schedule) => schedule.room === selectedRoom
+          );
+          setViewSelectedRoom(schedulesInRoom)
+
+        }
+      } catch (error) {
+        console.error('Error fetching history data:', error);
+      }
+    };
+  }, []);
+
+
+
 
 
   useEffect(() => {
@@ -245,7 +451,7 @@ function Analytics() {
     createBuildingChart();
     createRoomChart();
   }, [buildingStatisticsData, roomStatisticsData]);
-  
+
 
   useEffect(() => {
     const { mostUsedBuilding, leastUsedBuilding } = calculateBuildingUsage(buildingStatisticsData);
@@ -279,23 +485,28 @@ function Analytics() {
     Object.values(buildingsAndRooms).forEach(rooms => {
       rooms.forEach(room => allRoomsSet.add(room));
     });
-  
+
     const allRooms = Array.from(allRoomsSet);
     allRooms.forEach(room => {
       if (!roomStatisticsData.hasOwnProperty(room)) {
         roomStatisticsData[room] = 0;
       }
     });
-  
+
     const roomLabels = allRooms.map(room => `Room ${room}`);
     const roomData = allRooms.map(room => roomStatisticsData[room]);
-  
+
     const roomBarCtx = document.getElementById('roomBarChart').getContext('2d');
     roomBarChartRef.current = createBarChart(roomBarCtx, roomLabels, roomData);
   }
-  
+
 
   const handleFromDateChange = (event) => {
+    const selectedDate = event.target.value;
+    setSelectedFromDateRoomMonitoring(selectedDate);
+    const selectedDateObject = new Date(selectedDate);
+    const dayPrefix = dayWord[selectedDateObject.getDay()].slice(0, 3);
+    setDayNamePrefix(dayPrefix);
     setSelectedFromDate(event.target.value);
   };
 
@@ -419,8 +630,55 @@ function Analytics() {
     setMostUsedRoomByBuilding(roomUsageByBuilding);
     // If needed, set least used room by building as well
   }, [selectedWeek, selectedMonth, historyData, selectedBuilding, selectedRooms, selectedCourse]);
-  
-  
+  const parseTime = (timeString) => {
+    const [startTime] = timeString.split(' - ').map(str => str.trim()); // Trim each part of the time string
+    const [hour, minute] = startTime.split(':');
+    const isAM = timeString.includes('am');
+    let hours = parseInt(hour, 10);
+    if (!isAM && hours !== 12) {
+      hours += 12;
+    }
+    return hours * 60 + parseInt(minute, 10);
+  };
+
+  const parseDate = (timeString) => {
+    const date = new Date(timeString); // Current date and time
+    const dateString = date.toISOString().split('T')[0];
+    console.log('dateformat', dateString); // Output: "yyyy-mm-dd"
+    return dateString
+  };
+
+  const parseDate2 = (dateTime) => {
+    // Parse the datetime string
+    const date = new Date(dateTime);
+
+    // Extract year, month, and day components
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is zero-based
+    const day = String(date.getDate()).padStart(2, '0');
+
+    // Construct the formatted date string
+    const formattedDate = `${year}-${month}-${day}`;
+
+    return formattedDate;
+  };
+  const handleRoomClick = async (roomDetails) => {
+    const schedulesInRoom = scheduleDataRoom.filter(
+      (schedule) => schedule.room === roomDetails.room
+    );
+    const sortedViewSelectedRoom = [...schedulesInRoom].sort((a, b) => {
+      const startTimeA = parseTime(a.time);
+      const startTimeB = parseTime(b.time);
+      return startTimeA - startTimeB;
+    });
+
+    setViewSelectedRoom(sortedViewSelectedRoom)
+    console.log('schedules in room', scheduleDataRoom)
+    console.log('Room clicked:', roomDetails);
+    setSelectedRoom(roomDetails);
+    console.log('selectedRoom', selectedRoom);
+    setModalVisible(true);
+  };
 
   const calculateRoomUsage = () => {
     const scienceBuildingRooms = buildingsAndRooms['Science Building'];
@@ -435,7 +693,7 @@ function Analytics() {
       .filter(([room]) => nantesBuildingRooms.includes(room))
       .sort((a, b) => b[1] - a[1]);
 
-      const suarezBuildingData = Object.entries(roomStatisticsData)
+    const suarezBuildingData = Object.entries(roomStatisticsData)
       .filter(([room]) => suarezBuildingRooms.includes(room))
       .sort((a, b) => b[1] - a[1]);
 
@@ -470,23 +728,22 @@ function Analytics() {
   };
 
 
-
   useEffect(() => {
     calculateRoomUsage();
   }, [roomStatisticsData, buildingsAndRooms]);
 
   const totalBuildingHours = (new Date(selectedToDate) - new Date(selectedFromDate)) / (1000 * 60 * 60 * 24) * 14;
-  console.log(totalBuildingHours);
+ // console.log('nany', totalBuildingHours);
   const filteredEntries = filterHistoryData();
   const entryDuration = filteredEntries.reduce((totalDuration, entry) => {
     return totalDuration + calculateDurationInHours(entry.attendTime, entry.timeEnded);
   }, 0);
-  
+
   useEffect(() => {
     calculateRoomRankingsByBuilding();
   }, [roomStatisticsData]);
-  
- 
+
+
 
   return (
     <div>
@@ -506,163 +763,189 @@ function Analytics() {
         ))}
       </select>
 
-{/* Course Filter */}
-<div className="mb-3">
-  <label htmlFor="course" className="form-label">Select Course:</label>
-  <select id="course" className="form-select" value={selectedCourse} onChange={handleCourseChange}>
-    <option value="">All Courses</option>
-    {allCourses.map(course => (
-      <option key={course} value={course}>
-        {course}
-      </option>
-    ))}
-  </select>
-</div>
-
-
-
-      <div style={{ marginBottom: '20px', marginTop: '20px', padding: '20px' }}>
-        <h3 style={{ fontFamily: 'Bold', color: '#333' }}>Filter Summary</h3>
-        <table className="table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px', }}>
-          <tbody>
-            {filterSummary()}
-          </tbody>
-        </table>
+      {/* Course Filter */}
+      <div className="mb-3">
+        <label htmlFor="course" className="form-label">Select Course:</label>
+        <select id="course" className="form-select" value={selectedCourse} onChange={handleCourseChange}>
+          <option value="">All Courses</option>
+          {allCourses.map(course => (
+            <option key={course} value={course}>
+              {course}
+            </option>
+          ))}
+        </select>
       </div>
+
+
+
+     
       <div style={{ marginBottom: '20px', marginTop: '20px', padding: '20px', borderRadius: '8px', background: '#fff' }}>
-  <h3 style={{ fontFamily: 'Bold', color: '#333' }}>Room Usage and Summary</h3>
-  <table className="table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px' }}>
-    <thead>
-      <tr style={{ backgroundColor: '#f4f4f4', borderBottom: '2px solid #ddd' }}>
-        <th style={{ padding: '10px', textAlign: 'left', color: '#7393B3' }}>Building</th>
-        <th style={{ padding: '10px', textAlign: 'left', color: '#7393B3' }}>Most Used Room</th>
-        <th style={{ padding: '10px', textAlign: 'left', color: '#7393B3' }}>Least Used Room</th>
-      </tr>
-    </thead>
-    <tbody>
-      {Object.keys(mostUsedRoomByBuilding).map((building) => (
-        <tr key={building}>
-          <td style={{ fontFamily: 'Regular', padding: '10px' }}>{building}</td>
-          <td style={{ fontFamily: 'Regular', padding: '10px' }}>
-            {mostUsedRoomByBuilding[building].mostUsedRoom && (
-              `Room ${mostUsedRoomByBuilding[building].mostUsedRoom.room}`
-            )}
-          </td>
-          <td style={{ fontFamily: 'Regular', padding: '10px' }}>
-            {mostUsedRoomByBuilding[building].leastUsedRoom && (
-              `Room ${mostUsedRoomByBuilding[building].leastUsedRoom.room}`
-            )}
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
-<div style={{ display: 'flex', flexDirection: 'col', justifyContent: 'space-between', marginTop: '20px' }}>
-    {Object.keys(mostUsedRoomByBuilding).map((building) => (
-      <div key={building} style={{ maxWidth: '100%', margin: '20px', borderRadius: '8px', padding: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-        <h4 style={{ fontFamily: 'Bold', textAlign: 'left', marginBottom: '10px' }}>{building}</h4>
-        <p style={{ textAlign: 'left', marginBottom: '10px' }}>
-          - Most Used Room: {mostUsedRoomByBuilding[building].mostUsedRoom ? `Room ${mostUsedRoomByBuilding[building].mostUsedRoom.room}` : 'No records'}
-          {' '}
-          from {building} was most used on {selectedFromDate} to {selectedToDate}.
-        </p>
-        <p style={{ textAlign: 'left', marginBottom: '10px' }}>
-          - Least Used Room: {mostUsedRoomByBuilding[building].leastUsedRoom ? `Room ${mostUsedRoomByBuilding[building].leastUsedRoom.room}` : 'No records'}
-          {' '}
-          from {building} was least used on {selectedFromDate} to {selectedToDate}.
-        </p>
-      </div>
-    ))}
-  </div>
-
-
-
-
-      <div style={{ backgroundColor: '#D3D3D3', height: '1px', marginTop: '20px' }}></div>
-
-      <div style={{ margin: '5 auto', marginTop: '50px', display: 'flex', flexDirection:'col',  justifyContent: 'center',  }}>
-  <div style={{ flexBasis: '30%',margin: '10px', borderRadius: '8px', padding: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-    <h3 style={{ fontFamily: 'Bold' }}>Building Statistics and Usage</h3>
-    <canvas id="buildingChart" width="200" height="100" ></canvas>
-    <p style={{marginTop: '40px'}}>
-      {mostUsedBuilding && (
-        `Most Used Building: ${mostUsedBuilding} was most used on ${selectedFromDate} to ${selectedToDate} with ${buildingStatisticsData[mostUsedBuilding]} entries`
-      )}
-    </p>
-    <p>
-      {leastUsedBuilding && (
-        `Least Used Building: ${leastUsedBuilding} was least used on ${selectedFromDate} to ${selectedToDate} with ${buildingStatisticsData[leastUsedBuilding]} entries`
-      )}
-    </p>
-  </div>
-
-  <div style={{ flexBasis: '30%', borderRadius: '8px', padding: '2px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-    <h3 style={{ fontFamily: 'Bold' }}>Room Rankings</h3>
-    <canvas id="roomBarChart" width="500" height="300"></canvas>
-    {Object.keys(roomRankings).map(building => (
-    <div key={building} style={{ maxWidth: '100%', margin: '10px', padding: '20px' }}>
-      <h4 style={{ fontFamily: 'Bold', marginBottom: '10px' }}>{building}</h4>
-      <ol>
-        {roomRankings[building].map((roomInfo, index) => (
-          <li key={roomInfo.room}>
-            {`Room ${roomInfo.room}: ${roomInfo.count} entries`}
-          </li>
-        ))}
-      </ol>
-    </div>
-  ))}
-  </div>
-
-
-</div>
-
-      <div style={{ marginBottom: '20px', marginTop: '20px', padding: '20px', borderRadius: '8px', background: '#fff' }}>
-        <h3 style={{ fontFamily: 'Bold', color: '#333' }}>Rooms</h3>
-
-        <table className="table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px', }}>
+        <h3 style={{ fontFamily: 'Bold', color: '#333' }}>Room Usage and Summary</h3>
+        <table className="table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px' }}>
           <thead>
             <tr style={{ backgroundColor: '#f4f4f4', borderBottom: '2px solid #ddd' }}>
               <th style={{ padding: '10px', textAlign: 'left', color: '#7393B3' }}>Building</th>
-              <th style={{ padding: '10px', textAlign: 'left', color: '#7393B3' }}>Room</th>
-              <th style={{ padding: '10px', textAlign: 'left', color: '#7393B3' }}>Entries</th>
-              <th style={{ padding: '10px', textAlign: 'left', color: '#7393B3' }}>Usage Percentage</th>
+              <th style={{ padding: '10px', textAlign: 'left', color: '#7393B3' }}>Most Used Room</th>
+              <th style={{ padding: '10px', textAlign: 'left', color: '#7393B3' }}>Least Used Room</th>
             </tr>
           </thead>
-
           <tbody>
-            {Object.keys(buildingsAndRooms).map(building => (
-              <React.Fragment key={building}>
-                <tr style={{ backgroundColor: '#f4f4f4', borderBottom: '2px solid #ddd' }}>
-                  <td colSpan="4" style={{ padding: '10px', textAlign: 'left', color: '#7393B3', fontWeight: 'bold' }}>
-                    {building}
-                  </td>
-                </tr>
-                {buildingsAndRooms[building].map(room => {
-                  const entriesForCurrentRoom = filteredEntries.filter(entry => entry.room === room);
-                  const entryDurationForRoom = entriesForCurrentRoom.reduce((totalDuration, entry) => {
-                    return totalDuration + calculateDurationInHours(entry.attendTime, entry.timeEnded);
-                  }, 0);
-                  return (
-                    <tr key={room} style={{ borderBottom: '1px solid #ddd' }}>
-                      <td style={{ fontFamily: 'Regular', padding: '10px' }}>{building}</td>
-                      <td style={{ fontFamily: 'Regular', padding: '10px' }}>{`Room ${room}`}</td>
-                      <td style={{ fontFamily: 'Regular', padding: '10px' }}>{roomStatisticsData[room] || 0}</td>
-                      <td style={{ fontFamily: 'Regular', padding: '10px', color: '	#0000FF' }}>
-                        {`${((entryDurationForRoom / totalBuildingHours) * 100).toFixed(2)}%`}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </React.Fragment>
+            {Object.keys(mostUsedRoomByBuilding).map((building) => (
+              <tr key={building}>
+                <td style={{ fontFamily: 'Regular', padding: '10px' }}>{building}</td>
+                <td style={{ fontFamily: 'Regular', padding: '10px' }}>
+                  {mostUsedRoomByBuilding[building].mostUsedRoom && (
+                    `Room ${mostUsedRoomByBuilding[building].mostUsedRoom.room}`
+                  )}
+                </td>
+                <td style={{ fontFamily: 'Regular', padding: '10px' }}>
+                  {mostUsedRoomByBuilding[building].leastUsedRoom && (
+                    `Room ${mostUsedRoomByBuilding[building].leastUsedRoom.room}`
+                  )}
+                </td>
+              </tr>
             ))}
           </tbody>
         </table>
       </div>
 
 
+
+
+
+
+
+      <div style={{ marginBottom: '20px', marginTop: '20px', padding: '20px', borderRadius: '8px', background: '#fff' }}>
+        <h3 style={{ fontFamily: 'Bold', color: '#333' }}>Room Schedules Monitoring</h3>
+
+      </div>
+
+      <div style={{ backgroundColor: '#D3D3D3', height: '1px', marginTop: '20px' }}></div>
+      {/* <div>
+        <label htmlFor="fromDate">From Date:</label>
+        <input type="date" id="fromDate" value={selectedFromDateRoomMonitoring} onChange={handleFromDateRoomMonitoringChange} />
+      </div> */}
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ flexBasis: '33%', margin: '10px', borderRadius: '8px', padding: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+          <h3 style={{ fontFamily: 'Bold' }}>Nantes Building</h3>
+          <table className="table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px' }}>
+            <thead></thead>
+            <tbody>
+              {Object.keys(roomStat).filter(building => {
+                return roomStat[building].building === "Nantes Building";
+              }).map((building, index) => (
+                <tr key={index} onClick={() => handleRoomClick(roomStat[building], 2)} style={{ cursor: 'pointer' }}>
+                  <td style={{ width: '100%' }}>
+                    {`Room ${roomStat[building].room}: Occupied  ${roomStat[building].occupiedItems} Out Of  ${roomStat[building].totalItems}`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ flexBasis: '33%', margin: '10px', borderRadius: '8px', padding: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+          {/* Second Card Content */}
+          <h3 style={{ fontFamily: 'Bold' }}>Suarez Building</h3>
+          <table className="table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px' }}>
+            <thead></thead>
+            <tbody>
+              {Object.keys(roomStat).filter(building => {
+                return roomStat[building].building === "Suarez Building";
+              }).map((building, index) => (
+                <tr key={index} onClick={() => handleRoomClick(roomStat[building])} style={{ cursor: 'pointer' }}>
+                  <td style={{ width: '100%' }}>
+                    {`Room ${roomStat[building].room}: Occupied  ${roomStat[building].occupiedItems} Out Of  ${roomStat[building].totalItems}`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{ flexBasis: '33%', margin: '10px', borderRadius: '8px', padding: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+          {/* Third Card Content */}
+          <h3 style={{ fontFamily: 'Bold' }}>Science Building</h3>
+          <table className="table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px' }}>
+            <thead></thead>
+            <tbody>
+              {Object.keys(roomStat).filter(building => {
+                return roomStat[building].building === "Science Building";
+              }).map((building, index) => (
+                <tr key={index} onClick={() => handleRoomClick(roomStat[building], 2)} style={{ cursor: 'pointer' }}>
+                  <td style={{ width: '100%' }}>
+                    {`Room ${roomStat[building].room}: Occupied  ${roomStat[building].occupiedItems} Out Of  ${roomStat[building].totalItems}`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+
+      <div style={{ backgroundColor: '#D3D3D3', height: '1px', marginTop: '20px' }}></div>
+
+      <div style={{ margin: '5 auto', marginTop: '50px', display: 'flex', flexDirection: 'col', justifyContent: 'center', }}>
+        <div style={{ flexBasis: '30%', margin: '10px', borderRadius: '8px', padding: '20px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+          <h3 style={{ fontFamily: 'Bold' }}>Building Statistics and Usage</h3>
+          <canvas id="buildingChart" width="200" height="100" ></canvas>
+          <p style={{ marginTop: '40px' }}>
+            {mostUsedBuilding && (
+              `Most Used Building: ${mostUsedBuilding} was most used on ${selectedFromDate} to ${selectedToDate} with ${buildingStatisticsData[mostUsedBuilding]} entries`
+            )}
+          </p>
+          <p>
+            {leastUsedBuilding && (
+              `Least Used Building: ${leastUsedBuilding} was least used on ${selectedFromDate} to ${selectedToDate} with ${buildingStatisticsData[leastUsedBuilding]} entries`
+            )}
+          </p>
+        </div>
+
+        <div style={{ flexBasis: '30%', borderRadius: '8px', padding: '2px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+          <h3 style={{ fontFamily: 'Bold' }}>Room Rankings</h3>
+          <canvas id="roomBarChart" width="500" height="300"></canvas>
+          
+        </div>
+      </div>
+
+
+
+      {modalVisible && (
+        <div className="modal" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'fixed', top: '0', left: '0', width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', zIndex: '9999' }}>
+          <div className="modal-content" style={{ width: '70%', backgroundColor: '#fff', padding: '20px', borderRadius: '8px' }}>
+            {selectedRoom && (
+              <>
+                <h2>{`Room ${selectedRoom.room}`}</h2>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      <th>Subject</th>
+                      <th>Faculty Name</th>
+                      <th>Day</th>
+                      <th>Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.keys(viewSelectedRoom).map((property, index) => (
+                      <tr key={index} style={{ color: viewSelectedRoom[index].roomOccupied === '1' ? 'green' : 'red' }}>
+                        <td>{viewSelectedRoom[index].subjectDescription}</td>
+                        <td>{viewSelectedRoom[index].facultyName}</td>
+                        <td>{viewSelectedRoom[index].day}</td>
+                        <td>{viewSelectedRoom[index].time}</td>
+                      </tr>
+                    ))}
+
+                  </tbody>
+                </table>
+                <button onClick={handleCloseModal} style={{ marginTop: '10px' }}>Close</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
+
 }
 
 export default Analytics;

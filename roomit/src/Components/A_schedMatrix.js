@@ -17,6 +17,9 @@ function ViewScheduleMatrix({ schedules }) {
   };
 
   // Organize schedule data by days of the week
+  if(!schedules){
+return;
+  }
   const scheduleByDay = schedules.reduce((acc, schedule) => {
     const expandedDays = expandDays(schedule.day);
 
@@ -81,7 +84,7 @@ function ViewScheduleMatrix({ schedules }) {
 
                           if (scheduleStartTime.isSameOrBefore(cellStartTime) && scheduleEndTime.isSameOrAfter(cellStartTime)) {
                             const scheduleKey = `${filteredSchedule.subjectCode} - ${filteredSchedule.subjectDescription}`;
-                            const scheduleColor = scheduleColors[scheduleKey] || 'maroon'; // Default color is maroon
+                            const scheduleColor = filteredSchedule?.roomOccupied === "1" ? 'maroon' : 'green'; // Default color is maroon                         
 
                             return (
                               <div key={index} style={{ backgroundColor: scheduleColor, color: 'white' }}>

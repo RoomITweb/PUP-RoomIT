@@ -11,7 +11,8 @@ function ViewRoom({ facultySchedules }) {
   const [selectedBuilding, setSelectedBuilding] = useState(false); 
   const [facultySchedulesInRoom, setFacultySchedulesInRoom] = useState([]);
   const database = getDatabase(app);
-
+  const dayWord = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  let dayNamePrefix = '';
   useEffect(() => {
     const roomsRef = ref(database, 'rooms');
 
@@ -43,8 +44,10 @@ function ViewRoom({ facultySchedules }) {
     onValue(schedulesRef, (snapshot) => {
       if (snapshot.exists()) {
         const schedulesData = snapshot.val();
+        const currentDate = new Date();
+        dayNamePrefix = dayWord[currentDate.getDay()].slice(0, 3);
         const schedulesInRoom = Object.values(schedulesData).filter(
-          (schedule) => schedule.room === room
+          (schedule) => schedule.room === room && schedule.day.includes(dayNamePrefix)
         );
         setFacultySchedulesInRoom(schedulesInRoom);
       } else {

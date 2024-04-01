@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { getDatabase, ref, push, get } from 'firebase/database';
 import { app } from './firebase';
 import 'bootstrap/dist/css/bootstrap.css';
-
+import * as XLSX from 'xlsx';
 function AddSchedule() {
-  const [schoolYear, setSchoolYear] = useState('');
+ 
   const [semester, setSemester] = useState('');
   const [facultyName, setFacultyName] = useState('');
   const [subjectCode, setSubjectCode] = useState('');
@@ -23,7 +23,8 @@ function AddSchedule() {
   const [subjectCodes, setSubjectCodes] = useState([]);
   const [subjectsData, setSubjectsData] = useState([]);
   const [existingSchedules, setExistingSchedules] = useState([]);
-
+  const [yearHeader, setyearHeader] = useState('2023-2024');
+  const [schoolYear, setSchoolYear] = useState(yearHeader);
   useEffect(() => {
     // Fetch faculty names from the 'users' collection with 'faculty' role
     const fetchFacultyNames = async () => {
@@ -122,6 +123,80 @@ function AddSchedule() {
     setHours(totalHours.toString());
   }, [lecHours, labHours]);
 
+  const handleFileUpload = async (e) => {
+    const database = getDatabase(app);
+    const schedulesRef = ref(database, 'schedules');
+    let schedulesData = [];
+    try {
+      const snapshot = await get(schedulesRef);
+      if (snapshot.exists()) {
+        schedulesData = snapshot.val();
+       // console.log('schedulesData exist', snapshot.val())
+      }
+    //  console.log('get shcedules ', snapshot.val())
+    } catch (error) {
+    //  console.error('Error fetching existing schedules:', error);
+    }
+
+    const uploadedFile = e.target.files[0];
+    if (!uploadedFile) return;
+
+    const fileReader = new FileReader();
+    fileReader.onload = async (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0]; // Assuming data is in the first sheet
+      const sheet = workbook.Sheets[sheetName];
+      const excelData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      if (excelData.length > 0) {
+        const schedulesArray = excelData.slice(1).map(row => ({
+            schoolYear: String(row[0]), // Convert to string explicitly
+            semester: String(row[1]), // Convert to string explicitly
+            subjectCode: String(row[2]), // Convert to string explicitly
+            subjectDescription: String(row[3]), // Convert to string explicitly
+            lecHours: String(row[4]), // Convert to string explicitly
+            labHours: String(row[5]), // Convert to string explicitly
+            creditUnits: String(row[6]), // Convert to string explicitly
+            course: String(row[7]), // Convert to string explicitly
+            hours: String(row[8]), // Convert to string explicitly
+            day: String(row[9]), // Convert to string explicitly
+            time: String(row[10]), // Convert to string explicitly
+            building: String(row[11]), // Convert to string explicitly
+            room: String(row[12]), // Convert to string explicitly
+            facultyName: String(row[13]), // Convert to string explicitly
+        }));
+      //  console.log('existingSchedules', existingSchedules);
+        schedulesArray.forEach(newSchedule => {
+          const existingSchedIndex = existingSchedules.findIndex(existingSchedule =>
+            existingSchedule.semester === newSchedule.semester &&
+            existingSchedule.day === newSchedule.day &&
+            existingSchedule.room === newSchedule.room &&
+            existingSchedule.time.trim()=== newSchedule.time.trim()
+          );
+        
+          if (existingSchedIndex !== -1) {
+            console.error('Schedule already exists:', newSchedule);
+            existingSchedules.splice(existingSchedIndex, 1);
+          } else {
+            // console.log('Schedule Not exists:', newSchedule);          
+            const database = getDatabase(app);
+            const schedulesRef = ref(database, 'schedules');
+            push(schedulesRef, newSchedule).catch((error) => {
+              console.error('Error adding schedule:', error);
+              alert(
+                'An error occurred while adding the schedule. Please try again.'
+              );
+            });
+          }
+        });
+        alert('Excel data uploaded successfully!');
+      } else {
+        alert('No data found in the Excel file.');
+      }
+    };
+
+    fileReader.readAsArrayBuffer(uploadedFile);
+  };
   const handleAddSchedule = () => {
     if (
       !schoolYear ||
@@ -181,7 +256,6 @@ function AddSchedule() {
     push(schedulesRef, newSchedule)
       .then(() => {
         alert('Schedule added successfully!');
-        setSchoolYear('');
         setSemester('');
         setFacultyName('');
         setSubjectCode('');
@@ -206,11 +280,12 @@ function AddSchedule() {
   };
 
   return (
-    <div className="add-schedule-container" style={{ color: '#3d3d3d', padding: '10px', marginTop: '0px', marginBottom: '50px'}}>
+    <div className="add-schedule-container" style={{ color: '#3d3d3d', padding: '10px', marginTop: '0px', marginBottom: '50px' }}>
       <h2>Add Schedule</h2>
+      <h2>{yearHeader}</h2>
       <form>
-        <div className="form-group">
-        <label className = "placeholder-opt" htmlFor="semester">SCHOOL YEAR</label>
+        {/* <div className="form-group">
+          <label className="placeholder-opt" htmlFor="semester">SCHOOL YEAR</label>
           <input
             type="text"
             className="form-control"
@@ -219,10 +294,10 @@ function AddSchedule() {
             onChange={(e) => setSchoolYear(e.target.value)}
             required
           />
-        </div>
+        </div> */}
 
         <div className="form-group">
-          <label className = "placeholder-opt" htmlFor="semester">SEMESTER</label>
+          <label className="placeholder-opt" htmlFor="semester">SEMESTER</label>
           <select
             className="form-control"
             id="semester"
@@ -274,7 +349,7 @@ function AddSchedule() {
         </div>
 
         <div className="form-group">
-        <label htmlFor="subjectCode">SUBJECT DESCRIPTION</label>
+          <label htmlFor="subjectCode">SUBJECT DESCRIPTION</label>
           <input
             type="text"
             className="form-control"
@@ -287,7 +362,7 @@ function AddSchedule() {
         </div>
 
         <div className="form-group">
-        <label htmlFor="subjectCode">COURSE</label>
+          <label htmlFor="subjectCode">COURSE</label>
           <input
             type="text"
             className="form-control"
@@ -299,7 +374,7 @@ function AddSchedule() {
           />
         </div>
         <div className="form-group">
-        <label htmlFor="subjectCode">CREDIT UNITS</label>
+          <label htmlFor="subjectCode">CREDIT UNITS</label>
           <input
             type="text"
             className="form-control"
@@ -311,7 +386,7 @@ function AddSchedule() {
           />
         </div>
         <div className="form-group">
-        <label htmlFor="subjectCode">LECTURE HOURS</label>
+          <label htmlFor="subjectCode">LECTURE HOURS</label>
           <input
             type="text"
             className="form-control"
@@ -323,7 +398,7 @@ function AddSchedule() {
           />
         </div>
         <div className="form-group">
-        <label htmlFor="subjectCode">LAB HOURS</label>
+          <label htmlFor="subjectCode">LAB HOURS</label>
           <input
             type="text"
             className="form-control"
@@ -376,7 +451,7 @@ function AddSchedule() {
             onChange={(e) => setStartTime(e.target.value)}
             required
           >
-		<option hidden>Select Start Time</option>
+            <option hidden>Select Start Time</option>
             <option value="7:30am">7:30am</option>
             <option value="8:00am">8:00am</option>
             <option value="8:30am">8:30am</option>
@@ -456,7 +531,7 @@ function AddSchedule() {
             onChange={(e) => setBuilding(e.target.value)}
             required
           >
-           <option hidden>Select Building</option>
+            <option hidden>Select Building</option>
             <option value="Nantes Building">Nantes Building</option>
             <option value="Science Building">Science Building</option>
             <option value="Suarez Building">Suarez Building</option>
@@ -472,7 +547,7 @@ function AddSchedule() {
             onChange={(e) => setRoom(e.target.value)}
             required
           >
-           <option hidden>Select Room</option>
+            <option hidden>Select Room</option>
             {building === 'Nantes Building' && (
               <>
                 <option value="120">120</option>
@@ -521,11 +596,15 @@ function AddSchedule() {
             cursor: 'pointer',
             width: '400px',
             align: 'center',
-      
+
           }}
         >
           ADD SCHEDULE
         </button>
+        <div>
+          <h2>Upload Excel File</h2>
+          <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+        </div>
         <span style={{ textDecoration: 'line-through' }}></span>{' '}
       </form>
     </div>
